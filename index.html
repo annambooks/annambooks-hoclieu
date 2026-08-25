@@ -4,901 +4,176 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Annambooks - Học Liệu Số</title>
-    <!-- Bootstrap 5 CSS & Icons -->
+    <!-- Bootstrap 5 CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    
+    <!-- Firebase SDK & Cấu hình trực tiếp từ tài khoản của mày -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getFirestore, collection, getDocs, addDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyDvZzHsS8xklxzAXl5Zd2ZRVEWpdNgu-tY",
+            authDomain: "annambooks-hoclieu.firebaseapp.com",
+            projectId: "annambooks-hoclieu",
+            storageBucket: "annambooks-hoclieu.firebasestorage.app",
+            messagingSenderId: "249850173085",
+            appId: "1:249850173085:web:f68e9bff4c581fa40b2674",
+            measurementId: "G-EN9DQNG94H"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        // Đưa ra biến toàn cục để phần giao diện gọi
+        window.db = db;
+        window.collection = collection;
+        window.getDocs = getDocs;
+        window.addDoc = addDoc;
+    </script>
+
     <style>
         :root {
-            --primary-dark: #064e3b; /* Xanh lá đậm */
+            --primary-dark: #064e3b; /* Xanh lá đậm thương hiệu Annambooks */
             --primary-light: #f0fdf4;
             --accent-green: #059669;
         }
-
         body {
             background-color: var(--primary-light);
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         }
-
         .navbar-custom {
-            background-color: var(--primary-dark) !important;
-        }
-
-        .navbar-custom .navbar-brand, 
-        .navbar-custom .nav-link {
-            color: #ffffff !important;
-            font-weight: 500;
-        }
-
-        .navbar-custom .nav-link:hover {
-            color: #a7f3d0 !important;
-        }
-
-        .btn-success-custom {
             background-color: var(--primary-dark);
-            color: white;
-            border: none;
         }
-
-        .btn-success-custom:hover {
-            background-color: #022c22;
-            color: white;
-        }
-
         .card-custom {
-            border: 1px solid #d1fae5;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
-            transition: transform 0.2s;
-        }
-
-        .card-custom:hover {
-            transform: translateY(-3px);
-        }
-
-        .sidebar-left {
-            background: #ffffff;
-            border-right: 1px solid #e2e8f0;
-            min-height: calc(100vh - 56px);
-            padding: 20px 10px;
-        }
-
-        .tree-folder-btn {
-            background: none;
             border: none;
-            width: 100%;
-            text-align: left;
-            padding: 8px 12px;
-            color: #334155;
-            font-weight: 600;
-            border-radius: 6px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
         }
-
-        .tree-folder-btn:hover {
-            background-color: #f0fdf4;
-            color: var(--primary-dark);
-        }
-
-        .tree-sub-container {
-            padding-left: 15px;
-            display: none;
-        }
-
-        .tree-sub-container.open {
-            display: block;
-        }
-
-        .tree-item {
-            display: block;
-            padding: 6px 10px;
-            color: #475569;
-            text-decoration: none;
-            font-size: 0.9rem;
-            border-radius: 4px;
-            margin: 2px 0;
-        }
-
-        .tree-item:hover, .tree-item.active {
-            background-color: #e2e8f0;
-            color: #0f172a;
-        }
-
-        .view-section { display: none; }
-        .view-section.active { display: block; }
-
-        .course-thumb {
-            height: 150px;
-            background-size: cover;
-            background-position: center;
-            border-radius: 8px;
-            display: flex;
-            align-items: flex-end;
-            justify-content: center;
-            padding-bottom: 10px;
-            font-weight: bold;
+        .btn-custom {
+            background-color: var(--accent-green);
             color: white;
-            text-shadow: 0 1px 3px rgba(0,0,0,0.8);
-            position: relative;
         }
-        
-        .fav-btn {
-            position: absolute;
-            top: 10px;
-            right: 10px;
-            background: white;
-            border: none;
-            border-radius: 50%;
-            width: 35px;
-            height: 35px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-            color: #cbd5e1;
-            cursor: pointer;
-        }
-        .fav-btn.active { color: #dc2626; }
-
-        .playlist-sidebar {
-            background: #1e293b;
+        .btn-custom:hover {
+            background-color: #047857;
             color: white;
-            border-radius: 8px;
-            max-height: 520px;
-            overflow-y: auto;
         }
-        .playlist-item {
-            padding: 10px 15px;
-            border-bottom: 1px solid #334155;
-            cursor: pointer;
-            transition: background 0.2s;
-        }
-        .playlist-item:hover { background: #334155; }
-        .playlist-item.active { background: var(--primary-dark); border-left: 4px solid #10b981; }
     </style>
 </head>
 <body>
 
-    <!-- ================= 1. MÀN HÌNH ĐĂNG NHẬP / ĐĂNG KÝ ================= -->
-    <div id="authScreen" class="container mt-5 view-section active">
+    <!-- Thanh điều hướng -->
+    <nav class="navbar navbar-expand-lg navbar-dark navbar-custom shadow-sm">
+        <div class="container">
+            <a class="navbar-brand fw-bold" href="#"><i class="bi bi-book-half me-2"></i>Annambooks - Học Liệu Số</a>
+            <span class="text-white small"><i class="bi bi-cloud-check-fill text-info me-1"></i>Đã kết nối Đám mây</span>
+        </div>
+    </nav>
+
+    <!-- Nội dung chính -->
+    <div class="container my-5">
         <div class="row justify-content-center">
-            <div class="col-md-5">
-                <div class="card card-custom p-4 shadow-lg rounded-4 bg-white text-center">
-                    <div class="mb-2">
-                        <svg width="65" height="65" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg" class="mx-auto">
-                            <path d="M20 70C20 50 40 40 50 35C60 40 80 50 80 70V80H20V70Z" fill="#064e3b"/>
-                            <path d="M50 20C40 30 35 45 35 55H65C65 45 60 30 50 20Z" fill="#10b981"/>
-                            <circle cx="50" cy="50" r="8" fill="white"/>
-                        </svg>
-                    </div>
-                    <h3 class="fw-bold" style="color: var(--primary-dark);">Annambooks</h3>
-                    <p class="text-muted small mb-4">Hệ thống học liệu số độc quyền</p>
-                    
-                    <!-- Form đăng nhập -->
-                    <div id="loginForm" class="text-start">
-                        <div class="mb-3">
-                            <label class="form-label">Tên đăng nhập / Email</label>
-                            <input type="text" id="loginUser" class="form-control" placeholder="Nhập tài khoản của bạn">
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label">Mật khẩu</label>
-                            <input type="password" id="loginPass" class="form-control" placeholder="Nhập mật khẩu">
-                        </div>
-                        <div class="mb-3 form-check">
-                            <input type="checkbox" class="form-check-input" id="rememberMe">
-                            <label class="form-check-label small" for="rememberMe">Ghi nhớ đăng nhập</label>
-                        </div>
-                        <button class="btn btn-success-custom w-100 py-2 mb-2" onclick="handleLogin()">Đăng Nhập</button>
-                        <p class="text-center mt-2">Chưa có tài khoản? <a href="#" onclick="toggleAuth(true)" style="color: var(--accent-green); text-decoration: none; font-weight: bold;">Đăng ký ngay</a></p>
-                    </div>
+            <div class="col-md-8 text-center mb-4">
+                <h2 class="fw-bold text-success mb-2">Kho Học Liệu Thông Minh Annambooks</h2>
+                <p class="text-muted">Quản lý bài học và tài liệu trực tuyến, dữ liệu được lưu vĩnh viễn trên mây an toàn tuyệt đối!</p>
+            </div>
+        </div>
 
-                    <!-- Form đăng ký -->
-                    <div id="registerForm" class="text-start" style="display: none;">
+        <div class="row g-4">
+            <!-- Form thêm bài học (dành cho Admin) -->
+            <div class="col-md-4">
+                <div class="card card-custom p-4">
+                    <h5 class="fw-bold text-dark mb-3"><i class="bi bi-plus-circle me-2"></i>Thêm bài học mới</h5>
+                    <form id="add-course-form">
                         <div class="mb-3">
-                            <label class="form-label">Tên đăng nhập / Email của bạn</label>
-                            <input type="text" id="regUser" class="form-control" placeholder="Nhập email đăng ký">
+                            <label class="form-label small fw-bold">Tên bài học / Học liệu</label>
+                            <input type="text" id="course-title" class="form-control" placeholder="Ví dụ: Flashcard Tiếng Trung HSK 1" required>
                         </div>
                         <div class="mb-3">
-                            <label class="form-label">Mật khẩu</label>
-                            <input type="password" id="regPass" class="form-control" placeholder="Tạo mật khẩu">
+                            <label class="form-label small fw-bold">Mô tả chi tiết / Link video</label>
+                            <textarea id="course-desc" class="form-control" rows="3" placeholder="Nhập mô tả hoặc link Google Drive..."></textarea>
                         </div>
-                        <button class="btn btn-success-custom w-100 py-2 mb-2" onclick="handleRegister()">Đăng Ký Tài Khoản</button>
-                        <p class="text-center mt-2">Đã có tài khoản? <a href="#" onclick="toggleAuth(false)" style="color: var(--accent-green); text-decoration: none; font-weight: bold;">Đăng nhập</a></p>
+                        <button type="submit" class="btn btn-custom w-100 fw-bold">Lưu lên mây</button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Danh sách hiển thị -->
+            <div class="col-md-8">
+                <div class="card card-custom p-4">
+                    <h5 class="fw-bold text-dark mb-3"><i class="bi bi-list-check me-2"></i>Danh sách học liệu trên đám mây</h5>
+                    <div id="course-list" class="list-group">
+                        <p class="text-muted text-center py-3">Đang kết nối tải dữ liệu...</p>
                     </div>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- ================= 2. MÀN HÌNH CHÍNH ================= -->
-    <div id="mainScreen" class="view-section">
-        <nav class="navbar navbar-expand-lg navbar-custom px-4 shadow-sm">
-            <div class="container-fluid">
-                <a class="navbar-brand fw-bold d-flex align-items-center gap-2" href="#" onclick="showHomeDashboard()">
-                    <span style="font-size: 1.2rem;">📚</span> Annambooks - Học Liệu Số
-                </a>
-                <div class="collapse navbar-collapse justify-content-between">
-                    <ul class="navbar-nav mx-auto align-items-center">
-                        <li class="nav-item"><a class="nav-link" href="#" onclick="showHomeDashboard()">VÀO HỌC</a></li>
-                        <li class="nav-item"><a class="nav-link" href="#" onclick="showGuideList()">HƯỚNG DẪN SỬ DỤNG</a></li>
-                        <li class="nav-item" id="adminMenuBtn" style="display: none;">
-                            <a class="nav-link text-warning fw-bold" href="#" onclick="openAdminPanel()">⚙️ QUẢN LÝ (ADMIN)</a>
-                        </li>
-                    </ul>
-                    <div class="d-flex align-items-center">
-                        <span id="userEmailDisplay" class="text-light small me-3"></span>
-                        <button class="btn btn-outline-light btn-sm" onclick="handleLogout()">Đăng xuất</button>
-                    </div>
-                </div>
-            </div>
-        </nav>
-
-        <div class="container-fluid">
-            <div class="row">
-                <div class="col-md-3 col-lg-2 sidebar-left">
-                    <h6 class="text-uppercase fw-bold px-3 mb-2 small text-muted">CẤU TRÚC THƯ MỤC</h6>
-                    <a href="#" onclick="showHomeDashboard()" class="tree-item fw-bold mb-2"><i class="bi bi-house-door me-2"></i> Tất cả bài học</a>
-                    <div id="driveTreeView"></div>
-                    <hr class="my-3">
-                    <a href="#" onclick="showFavorites()" class="tree-item text-danger fw-bold"><i class="bi bi-heart-fill me-2"></i> Yêu thích của tôi</a>
-                </div>
-
-                <div class="col-md-9 col-lg-10 p-4" id="contentArea"></div>
-            </div>
-        </div>
-    </div>
-
-    <!-- ================= 3. MODAL QUẢN TRỊ ADMIN ================= -->
-    <div class="modal fade" id="adminModal" tabindex="-1">
-        <div class="modal-dialog modal-lg">
-            <div class="modal-content">
-                <div class="modal-header navbar-custom text-white">
-                    <h5 class="modal-title">Bảng Quản Trị Annambooks</h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body">
-                    <ul class="nav nav-tabs mb-3" role="tablist">
-                        <li class="nav-item"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#tabUser">Quản lý Tài Khoản</button></li>
-                        <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tabCourse">Quản lý Bài Học</button></li>
-                        <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tabBigCat">Quản lý Danh Mục Lớn</button></li>
-                        <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tabSubCat">Quản lý Chủ đề nhỏ</button></li>
-                        <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tabGuide">Quản lý Hướng Dẫn</button></li>
-                    </ul>
-                    
-                    <div class="tab-content">
-                        <!-- Quản lý Tài khoản Khách & Phê duyệt -->
-                        <div class="tab-pane fade show active" id="tabUser">
-                            <p class="text-muted small">Phê duyệt hoặc chặn các tài khoản đăng ký để kiểm soát người dùng truy cập hệ thống:</p>
-                            <div class="input-group mb-3">
-                                <input type="text" id="newAdminUser" class="form-control" placeholder="Tên đăng nhập / Email khách">
-                                <input type="password" id="newAdminPass" class="form-control" placeholder="Mật khẩu">
-                                <button class="btn btn-success-custom" onclick="adminAddUser()">+ Thêm tài khoản</button>
-                            </div>
-                            <div id="adminUserList" style="max-height: 200px; overflow-y: auto;" class="border p-2 bg-light small"></div>
-                        </div>
-
-                        <!-- Quản lý Bài học -->
-                        <div class="tab-pane fade" id="tabCourse">
-                            <div class="row">
-                                <div class="col-md-4 mb-3">
-                                    <label class="form-label fw-bold">1. Danh mục lớn:</label>
-                                    <select id="adminCat" class="form-select"></select>
-                                </div>
-                                <div class="col-md-4 mb-3">
-                                    <label class="form-label fw-bold">2. Ngôn ngữ:</label>
-                                    <select id="adminLang" class="form-select">
-                                        <option value="Tiếng Việt">Tiếng Việt</option>
-                                        <option value="Tiếng Anh">Tiếng Anh</option>
-                                        <option value="Tiếng Trung">Tiếng Trung</option>
-                                    </select>
-                                </div>
-                                <div class="col-md-4 mb-3">
-                                    <label class="form-label fw-bold">3. Chủ đề nhỏ:</label>
-                                    <select id="adminSubCat" class="form-select"></select>
-                                </div>
-                            </div>
-                            <div class="row">
-                                <div class="col-md-6 mb-3">
-                                    <label class="form-label fw-bold">Tiêu đề bài học:</label>
-                                    <input type="text" id="adminTitle" class="form-control" placeholder="Ví dụ: Flashcard Hoa quả">
-                                </div>
-                                <div class="col-md-6 mb-3">
-                                    <label class="form-label fw-bold text-success">Link Hình Ảnh Bìa (URL):</label>
-                                    <input type="text" id="adminThumb" class="form-control" placeholder="Dán link ảnh minh họa">
-                                </div>
-                            </div>
-                            <div class="mb-3">
-                                <label class="form-label fw-bold">Link Google Drive video bài học:</label>
-                                <input type="text" id="adminDrive" class="form-control" placeholder="Dán link chia sẻ hoặc mã ID Drive">
-                            </div>
-                            <button class="btn btn-success-custom w-100" onclick="addNewCourse()">+ Thêm Bài Học Mới</button>
-                            <hr class="my-3">
-                            <div id="adminCourseList" style="max-height: 120px; overflow-y: auto;" class="border p-2 bg-light small"></div>
-                        </div>
-
-                        <!-- Quản lý Danh mục Lớn -->
-                        <div class="tab-pane fade" id="tabBigCat">
-                            <div class="mb-3">
-                                <label class="form-label fw-bold">Tên Danh Mục Lớn Mới:</label>
-                                <input type="text" id="newBigCatName" class="form-control" placeholder="Nhập danh mục lớn">
-                            </div>
-                            <button class="btn btn-success-custom w-100" onclick="addNewBigCategory()">+ Thêm Danh Mục Lớn</button>
-                            <hr class="my-3">
-                            <div id="adminBigCatList" style="max-height: 150px; overflow-y: auto;" class="border p-2 bg-light small"></div>
-                        </div>
-
-                        <!-- Quản lý Chủ đề nhỏ -->
-                        <div class="tab-pane fade" id="tabSubCat">
-                            <div class="mb-3">
-                                <label class="form-label fw-bold">Tên chủ đề nhỏ mới:</label>
-                                <input type="text" id="newSubCatName" class="form-control" placeholder="Nhập chủ đề nhỏ">
-                            </div>
-                            <button class="btn btn-success-custom w-100" onclick="addNewSubCategory()">+ Thêm Chủ Đề Nhỏ</button>
-                            <hr class="my-3">
-                            <div id="adminSubCatList" style="max-height: 150px; overflow-y: auto;" class="border p-2 bg-light small"></div>
-                        </div>
-
-                        <!-- Quản lý Hướng dẫn -->
-                        <div class="tab-pane fade" id="tabGuide">
-                            <div class="row">
-                                <div class="col-md-6 mb-3">
-                                    <label class="form-label fw-bold">Chủ đề lớn:</label>
-                                    <input type="text" id="guideCat" class="form-control" placeholder="Chủ đề">
-                                </div>
-                                <div class="col-md-6 mb-3">
-                                    <label class="form-label fw-bold">Tiêu đề:</label>
-                                    <input type="text" id="guideTitle" class="form-control" placeholder="Tiêu đề video">
-                                </div>
-                            </div>
-                            <div class="mb-3">
-                                <label class="form-label fw-bold">Link Drive hướng dẫn:</label>
-                                <input type="text" id="guideDrive" class="form-control" placeholder="Dán link Drive">
-                            </div>
-                            <button class="btn btn-success-custom w-100" onclick="addNewGuide()">+ Thêm Video Hướng Dẫn</button>
-                            <hr class="my-3">
-                            <div id="adminGuideList" style="max-height: 120px; overflow-y: auto;" class="border p-2 bg-light small"></div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Bootstrap JS Bundle -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    
-    <script>
-        let categories = JSON.parse(localStorage.getItem('annam_bigcats_v12')) || ['3000 thẻ điện tử', 'Kho audio tiếng việt trung anh', 'Khóa học nuôi dạy em bé'];
-        let subCategories = JSON.parse(localStorage.getItem('annam_subcats_v12')) || ['Hoa quả', 'Số đếm', 'Màu sắc', 'Động vật'];
-        
-        let coursesData = JSON.parse(localStorage.getItem('annam_courses_v12')) || [
-            { id: 1, title: 'Flashcard Hoa quả - Tiếng Việt', category: '3000 thẻ điện tử', lang: 'Tiếng Việt', subCat: 'Hoa quả', age: '2-3 tuổi', driveId: '1N6BK6C6wXKdTwsG1hzN6LOwtKSZwyvw7', thumb: '' }
-        ];
-
-        let guideData = JSON.parse(localStorage.getItem('annam_guides_v12')) || [
-            { id: 1, category: 'Khởi đầu', title: 'Hướng dẫn sử dụng kho học liệu', driveId: '1N6BK6C6wXKdTwsG1hzN6LOwtKSZwyvw7', thumb: '' }
-        ];
-
-        // Quản lý danh sách tài khoản khách (Lưu trạng thái duyệt)
-        let userAccounts = JSON.parse(localStorage.getItem('annam_user_accounts')) || {
-            'khachhang1@gmail.com': { pass: '123456', status: 'approved' }
-        };
-
-        window.onload = function() {
-            let savedUser = localStorage.getItem('rememberedUser') || sessionStorage.getItem('currentUser');
-            if(savedUser) startApp(savedUser);
-        };
-
-        function toggleAuth(isReg) {
-            document.getElementById('loginForm').style.display = isReg ? 'none' : 'block';
-            document.getElementById('registerForm').style.display = isReg ? 'block' : 'none';
-        }
-
-        // Đăng ký tài khoản mới (Chờ admin phê duyệt)
-        function handleRegister() {
-            let user = document.getElementById('regUser').value.trim();
-            let pass = document.getElementById('regPass').value.trim();
-
-            if(!user || !pass) { alert('Vui lòng điền đầy đủ thông tin!'); return; }
-            if(user === 'annambooksadmin') { alert('Tên tài khoản này không được phép đăng ký!'); return; }
-            if(userAccounts[user]) { alert('Tài khoản này đã tồn tại!'); return; }
-
-            userAccounts[user] = { pass: pass, status: 'pending' }; // pending = chờ duyệt
-            localStorage.setItem('annam_user_accounts', JSON.stringify(userAccounts));
-            
-            alert('Đăng ký thành công! Vui lòng chờ Admin phê duyệt tài khoản mới có thể đăng nhập.');
-            toggleAuth(false);
-        }
-
-        // Đăng nhập
-        function handleLogin() {
-            let user = document.getElementById('loginUser').value.trim();
-            let pass = document.getElementById('loginPass').value.trim();
-            let remember = document.getElementById('rememberMe').checked;
-
-            // Kiểm tra Admin tối cao
-            if(user === 'annambooksadmin' && pass === '09042021') {
-                if(remember) localStorage.setItem('rememberedUser', 'annambooksadmin');
-                sessionStorage.setItem('currentUser', 'annambooksadmin');
-                startApp('annambooksadmin');
-                return;
-            }
-
-            let acc = userAccounts[user];
-            if(acc && acc.pass === pass) {
-                if(acc.status !== 'approved') {
-                    alert('Tài khoản của bạn đang chờ Admin phê duyệt, vui lòng liên hệ quản trị viên!');
+    <!-- Script xử lý dữ liệu với Firebase -->
+    <script type="module">
+        async function loadCourses() {
+            const listContainer = document.getElementById('course-list');
+            try {
+                // Đợi một xíu cho Firebase khởi tạo xong
+                if (!window.db) {
+                    setTimeout(loadCourses, 500);
                     return;
                 }
-                if(remember) localStorage.setItem('rememberedUser', user);
-                sessionStorage.setItem('currentUser', user);
-                startApp(user);
-            } else {
-                alert('Tên đăng nhập hoặc mật khẩu không chính xác!');
-            }
-        }
-
-        function handleLogout() {
-            localStorage.removeItem('rememberedUser');
-            sessionStorage.removeItem('currentUser');
-            document.getElementById('mainScreen').classList.remove('active');
-            document.getElementById('authScreen').classList.add('active');
-        }
-
-        function startApp(username) {
-            document.getElementById('authScreen').classList.remove('active');
-            document.getElementById('mainScreen').classList.add('active');
-            document.getElementById('userEmailDisplay').innerText = `👤 ${username}`;
-            document.getElementById('adminMenuBtn').style.display = (username === 'annambooksadmin') ? 'block' : 'none';
-
-            renderDriveTree();
-            showHomeDashboard();
-        }
-
-        // --- CÂY THƯ MỤC BÊN TRÁI ---
-        function renderDriveTree() {
-            let treeContainer = document.getElementById('driveTreeView');
-            let html = '';
-
-            categories.forEach((cat, catIdx) => {
-                html += `
-                    <div class="mb-1">
-                        <button class="tree-folder-btn" onclick="toggleFolder('folder_${catIdx}')">
-                            <span><i class="bi bi-folder-fill text-warning me-2"></i> ${cat}</span>
-                            <i class="bi bi-chevron-down small"></i>
-                        </button>
-                        <div class="tree-sub-container" id="folder_${catIdx}">
-                `;
-
-                ['Tiếng Việt', 'Tiếng Anh', 'Tiếng Trung'].forEach(lang => {
-                    html += `
-                        <div class="ms-2 my-1">
-                            <button class="tree-folder-btn py-1" onclick="toggleFolder('sub_${catIdx}_${lang}')" style="font-size: 0.9rem;">
-                                <span><i class="bi bi-folder text-success me-2"></i> ${lang}</span>
-                                <i class="bi bi-chevron-right small"></i>
-                            </button>
-                            <div class="tree-sub-container ms-3" id="sub_${catIdx}_${lang}">
-                    `;
-
-                    subCategories.forEach(sc => {
-                        html += `<a href="#" class="tree-item" onclick="filterByDrivePath('${cat}', '${lang}', '${sc}')"><i class="bi bi-file-earmark-play me-2"></i> ${sc}</a>`;
-                    });
-
-                    html += `</div></div>`;
-                });
-
-                html += `</div></div>`;
-            });
-
-            treeContainer.innerHTML = html;
-        }
-
-        function toggleFolder(id) {
-            let el = document.getElementById(id);
-            if(el) el.classList.toggle('open');
-        }
-
-        function filterByDrivePath(cat, lang, subCat) {
-            showHomeDashboard(`${cat} > ${lang} > ${subCat}`);
-            let filtered = coursesData.filter(c => c.category === cat && c.lang === lang && c.subCat === subCat);
-            renderCourses(filtered);
-        }
-
-        // --- KHU VỰC HIỂN THỊ BÊN PHẢI ---
-        function showHomeDashboard(title = "Tất cả kho học liệu số") {
-            document.getElementById('contentArea').innerHTML = `
-                <div class="row mb-4 align-items-center">
-                    <div class="col-md-7">
-                        <h4 class="fw-bold mb-0" style="color: var(--primary-dark);" id="viewTitle">${title}</h4>
-                    </div>
-                    <div class="col-md-5 d-flex gap-1 flex-wrap align-items-center justify-content-end">
-                        <span class="badge bg-secondary p-2" onclick="setAgeFilter('all')" style="cursor:pointer;">Tất cả</span>
-                        <span class="badge bg-success p-2" onclick="setAgeFilter('2-3')" style="cursor:pointer;">2-3 tuổi</span>
-                        <span class="badge bg-success p-2" onclick="setAgeFilter('3-4')" style="cursor:pointer;">3-4 tuổi</span>
-                    </div>
-                </div>
-                <div class="row" id="courseGrid"></div>
-            `;
-            renderCourses(coursesData);
-        }
-
-        let currentAgeFilter = 'all';
-        function setAgeFilter(age) { currentAgeFilter = age; renderCourses(coursesData); }
-
-        function getCurrentUser() { return sessionStorage.getItem('currentUser') || localStorage.getItem('rememberedUser') || 'guest'; }
-        function getUserFavorites() { return JSON.parse(localStorage.getItem('fav_' + getCurrentUser())) || []; }
-
-        function toggleFavorite(id, event) {
-            event.stopPropagation();
-            let favs = getUserFavorites();
-            let idx = favs.indexOf(id);
-            if(idx > -1) favs.splice(idx, 1); else favs.push(id);
-            localStorage.setItem('fav_' + getCurrentUser(), JSON.stringify(favs));
-            renderCourses(currentListCache);
-        }
-
-        let currentListCache = null;
-        function renderCourses(list) {
-            currentListCache = list;
-            let grid = document.getElementById('courseGrid');
-            let favs = getUserFavorites();
-            let html = '';
-            
-            let filtered = list.filter(c => currentAgeFilter === 'all' || c.age.includes(currentAgeFilter));
-
-            if(filtered.length === 0) {
-                html = `<p class="text-center text-muted p-5">Chưa có video bài học nào trong thư mục này.</p>`;
-            } else {
-                filtered.forEach(item => {
-                    let isFav = favs.includes(item.id);
-                    let bgStyle = item.thumb ? `background-image: url('${item.thumb}');` : `background: linear-gradient(135deg, #064e3b, #10b981);`;
-                    html += `
-                        <div class="col-md-4 mb-4">
-                            <div class="card card-custom p-3 bg-white h-100 rounded-4">
-                                <div class="course-thumb mb-3" style="${bgStyle} cursor: pointer;" onclick="playCourseWithPlaylist(${item.id}, ${JSON.stringify(filtered).replace(/"/g, '&quot;')})">
-                                    <button class="fav-btn ${isFav ? 'active' : ''}" onclick="toggleFavorite(${item.id}, event)">
-                                        <i class="bi bi-heart-fill"></i>
-                                    </button>
-                                    <span>▶ XEM VIDEO</span>
-                                </div>
-                                <div class="mb-2">
-                                    <span class="badge bg-success">${item.lang || ''}</span>
-                                    <span class="badge bg-secondary">${item.subCat || ''}</span>
-                                </div>
-                                <h5 class="fw-bold text-dark" style="font-size: 1.05rem;">${item.title}</h5>
-                                <p class="text-muted small mb-2">Độ tuổi: <b>${item.age}</b></p>
-                                <button class="btn btn-sm btn-success-custom mt-auto" onclick="playCourseWithPlaylist(${item.id}, ${JSON.stringify(filtered).replace(/"/g, '&quot;')})">Vào Học Ngay</button>
-                            </div>
-                        </div>
-                    `;
-                });
-            }
-            grid.innerHTML = html;
-        }
-
-        function showFavorites() {
-            showHomeDashboard("Bài học yêu thích của tôi");
-            let favs = getUserFavorites();
-            let filtered = coursesData.filter(c => favs.includes(c.id));
-            renderCourses(filtered);
-        }
-
-        // --- TRÌNH PHÁT VIDEO ---
-        let currentPlaylist = [];
-        let currentIndex = 0;
-
-        function extractDriveId(inputStr) {
-            if(!inputStr) return '';
-            inputStr = inputStr.trim();
-            let match = inputStr.match(/\/d\/([a-zA-Z0-9_-]+)/);
-            if (match && match[1]) return match[1];
-            let matchParam = inputStr.match(/[?&]id=([a-zA-Z0-9_-]+)/);
-            if (matchParam && matchParam[1]) return matchParam[1];
-            return inputStr;
-        }
-
-        function playCourseWithPlaylist(activeId, playlist) {
-            currentPlaylist = playlist;
-            currentIndex = currentPlaylist.findIndex(c => c.id === activeId);
-            if(currentIndex === -1) currentIndex = 0;
-            renderPlayerScreen();
-        }
-
-        function renderPlayerScreen() {
-            let item = currentPlaylist[currentIndex];
-            if(!item) return;
-            let cleanId = extractDriveId(item.driveId);
-
-            let playlistHtml = '';
-            currentPlaylist.forEach((p, idx) => {
-                let isActive = idx === currentIndex ? 'active' : '';
-                playlistHtml += `
-                    <div class="playlist-item ${isActive}" onclick="switchVideo(${idx})">
-                        <div class="small fw-bold text-truncate">${idx + 1}. ${p.title}</div>
-                        <div class="text-muted" style="font-size: 0.75rem;">Độ tuổi: ${p.age}</div>
-                    </div>
-                `;
-            });
-
-            document.getElementById('contentArea').innerHTML = `
-                <button class="btn btn-secondary btn-sm mb-3" onclick="showHomeDashboard()">← Quay lại danh sách</button>
-                <div class="row">
-                    <div class="col-lg-8 mb-3">
-                        <div class="card p-3 border-success bg-white rounded-4 shadow-sm">
-                            <h4 class="text-success mb-2" id="videoTitle">${item.title}</h4>
-                            <div class="ratio ratio-16x9 bg-black rounded overflow-hidden">
-                                <iframe id="mainIframe" src="https://drive.google.com/file/d/${cleanId}/preview" allow="autoplay" allowfullscreen></iframe>
-                            </div>
-                            <div class="d-flex justify-content-between align-items-center mt-3">
-                                <button class="btn btn-outline-success btn-sm" onclick="prevVideo()">⏮ Bài trước</button>
-                                <span class="text-muted small">Chọn bài trực tiếp bên cột danh sách phát</span>
-                                <button class="btn btn-success-custom btn-sm" onclick="nextVideo()">Bài tiếp ⏭</button>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-lg-4">
-                        <div class="p-3 shadow-sm playlist-sidebar">
-                            <h6 class="fw-bold mb-3 border-bottom pb-2"><i class="bi bi-play-btn-fill me-2"></i> Danh sách phát (${currentPlaylist.length} bài)</h6>
-                            <div>${playlistHtml}</div>
-                        </div>
-                    </div>
-                </div>
-            `;
-        }
-
-        function switchVideo(idx) {
-            currentIndex = idx;
-            renderPlayerScreen();
-        }
-
-        function nextVideo() {
-            if(currentIndex < currentPlaylist.length - 1) {
-                currentIndex++;
-                renderPlayerScreen();
-            } else {
-                alert('Đã đến bài học cuối cùng trong thư mục!');
-            }
-        }
-
-        function prevVideo() {
-            if(currentIndex > 0) {
-                currentIndex--;
-                renderPlayerScreen();
-            } else {
-                alert('Đây là bài học đầu tiên!');
-            }
-        }
-
-        // --- HƯỚNG DẪN SỬ DỤNG ---
-        function showGuideList() {
-            let area = document.getElementById('contentArea');
-            let html = `<h3 class="fw-bold mb-4" style="color: var(--primary-dark);">📖 Hướng Dẫn Sử Dụng</h3><div class="row">`;
-            guideData.forEach(g => {
-                let bgStyle = g.thumb ? `background-image: url('${g.thumb}');` : `background: var(--primary-dark);`;
-                html += `
-                    <div class="col-md-4 mb-4">
-                        <div class="card card-custom p-3 bg-white h-100 rounded-4">
-                            <div class="course-thumb mb-3" style="${bgStyle} cursor: pointer;" onclick="playCourseWithPlaylist(${g.id}, ${JSON.stringify(guideData).replace(/"/g, '&quot;')})">
-                                ▶ XEM HƯỚNG DẪN
-                            </div>
-                            <span class="badge bg-info text-dark mb-2 align-self-start">${g.category}</span>
-                            <h5 class="fw-bold text-dark">${g.title}</h5>
-                            <button class="btn btn-sm btn-success-custom mt-auto" onclick="playCourseWithPlaylist(${g.id}, ${JSON.stringify(guideData).replace(/"/g, '&quot;')})">Xem Ngay</button>
-                        </div>
-                    </div>
-                `;
-            });
-            html += `</div>`;
-            area.innerHTML = html;
-        }
-
-        // --- ADMIN PANEL ---
-        function openAdminPanel() {
-            renderAdminLists();
-            let myModal = new bootstrap.Modal(document.getElementById('adminModal'));
-            myModal.show();
-        }
-
-        function renderAdminLists() {
-            // Danh sách quản lý tài khoản khách
-            let uList = document.getElementById('adminUserList');
-            let uHtml = '';
-            for(let acc in userAccounts) {
-                let statusBadge = userAccounts[acc].status === 'approved' 
-                    ? '<span class="badge bg-success">Đã duyệt</span>' 
-                    : '<span class="badge bg-warning text-dark">Chờ duyệt</span>';
-                let actionBtn = userAccounts[acc].status === 'approved'
-                    ? `<button class="btn btn-sm btn-warning py-0" onclick="toggleUserStatus('${acc}')">Khóa</button>`
-                    : `<button class="btn btn-sm btn-success py-0" onclick="toggleUserStatus('${acc}')">Phê duyệt</button>`;
+                const querySnapshot = await window.getDocs(window.collection(window.db, "hoclieu"));
+                if (querySnapshot.empty) {
+                    listContainer.innerHTML = `<div class="alert alert-info text-center m-0">Chưa có bài học nào trên đám mây. Hãy thêm bài học bên cạnh!</div>`;
+                    return;
+                }
                 
-                uHtml += `<div class="d-flex justify-content-between align-items-center border-bottom py-1">
-                    <span><b>${acc}</b> ${statusBadge}</span>
-                    <div>
-                        ${actionBtn}
-                        <button class="btn btn-sm btn-danger py-0 ms-1" onclick="deleteUser('${acc}')">Xóa</button>
-                    </div>
-                </div>`;
+                let html = '';
+                querySnapshot.forEach((doc) => {
+                    let data = doc.data();
+                    html += `
+                        <div class="list-group-item d-flex justify-content-between align-items-center py-3">
+                            <div>
+                                <h6 class="mb-1 fw-bold text-success">${data.title}</h6>
+                                <p class="mb-0 text-muted small">${data.description || 'Không có mô tả'}</p>
+                            </div>
+                            <span class="badge bg-success bg-opacity-10 text-success border border-success px-2 py-1">Đã lưu vĩnh viễn</span>
+                        </div>
+                    `;
+                });
+                listContainer.innerHTML = html;
+            } catch (error) {
+                console.error("Lỗi:", error);
+                listContainer.innerHTML = `<div class="alert alert-danger text-center m-0">Chưa bật Firestore Database trong Firebase Console!</div>`;
             }
-            uList.innerHTML = uHtml || 'Chưa có tài khoản khách nào.';
+        }
 
-            let catSelect = document.getElementById('adminCat');
-            catSelect.innerHTML = '';
-            categories.forEach(c => { catSelect.innerHTML += `<option value="${c}">${c}</option>`; });
+        // Khi người dùng bấm nút thêm bài học
+        window.addEventListener('DOMContentLoaded', () => {
+            setTimeout(loadCourses, 1000);
 
-            let subSelect = document.getElementById('adminSubCat');
-            subSelect.innerHTML = '';
-            subCategories.forEach(sc => { subSelect.innerHTML += `<option value="${sc}">${sc}</option>`; });
+            const form = document.getElementById('add-course-form');
+            form.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const title = document.getElementById('course-title').value;
+                const description = document.getElementById('course-desc').value;
 
-            let bigCatListDiv = document.getElementById('adminBigCatList');
-            let bigCatHtml = '';
-            categories.forEach((bc, idx) => {
-                bigCatHtml += `<div class="d-flex justify-content-between align-items-center border-bottom py-1">
-                    <span><b>${bc}</b></span>
-                    <button class="btn btn-sm btn-danger py-0" onclick="deleteBigCategory(${idx})">Xóa</button>
-                </div>`;
+                try {
+                    await window.addDoc(window.collection(window.db, "hoclieu"), {
+                        title: title,
+                        description: description,
+                        createdAt: new Date().toISOString()
+                    });
+                    alert("Đã lưu bài học lên mây thành công!");
+                    form.reset();
+                    loadCourses(); // Tải lại danh sách
+                } catch (error) {
+                    alert("Lỗi khi lưu: " + error.message);
+                }
             });
-            bigCatListDiv.innerHTML = bigCatHtml || 'Chưa có danh mục lớn.';
-
-            let subListDiv = document.getElementById('adminSubCatList');
-            let subHtml = '';
-            subCategories.forEach((sc, idx) => {
-                subHtml += `<div class="d-flex justify-content-between align-items-center border-bottom py-1">
-                    <span><b>${sc}</b></span>
-                    <button class="btn btn-sm btn-danger py-0" onclick="deleteSubCategory(${idx})">Xóa</button>
-                </div>`;
-            });
-            subListDiv.innerHTML = subHtml || 'Chưa có chủ đề nhỏ.';
-
-            let cList = document.getElementById('adminCourseList');
-            let cHtml = '';
-            coursesData.forEach(c => {
-                cHtml += `<div class="d-flex justify-content-between align-items-center border-bottom py-1">
-                    <span><b>[${c.category} > ${c.lang} > ${c.subCat}]</b> ${c.title}</span>
-                    <button class="btn btn-sm btn-danger py-0" onclick="deleteCourse(${c.id})">Xóa</button>
-                </div>`;
-            });
-            cList.innerHTML = cHtml || 'Chưa có bài học.';
-
-            let gList = document.getElementById('adminGuideList');
-            let gHtml = '';
-            guideData.forEach(g => {
-                gHtml += `<div class="d-flex justify-content-between align-items-center border-bottom py-1">
-                    <span><b>[${g.category}]</b> ${g.title}</span>
-                    <button class="btn btn-sm btn-danger py-0" onclick="deleteGuide(${g.id})">Xóa</button>
-                </div>`;
-            });
-            gList.innerHTML = gHtml || 'Chưa có hướng dẫn.';
-        }
-
-        // Quản lý tài khoản từ phía Admin
-        function adminAddUser() {
-            let u = document.getElementById('newAdminUser').value.trim();
-            let p = document.getElementById('newAdminPass').value.trim();
-            if(!u || !p) { alert('Nhập đầy đủ thông tin tài khoản!'); return; }
-            if(userAccounts[u]) { alert('Tài khoản đã tồn tại!'); return; }
-
-            userAccounts[u] = { pass: p, status: 'approved' }; // Admin thêm tự động duyệt
-            localStorage.setItem('annam_user_accounts', JSON.stringify(userAccounts));
-            document.getElementById('newAdminUser').value = '';
-            document.getElementById('newAdminPass').value = '';
-            renderAdminLists();
-            alert('Thêm và cấp phép tài khoản thành công!');
-        }
-
-        function toggleUserStatus(acc) {
-            if(userAccounts[acc].status === 'approved') {
-                userAccounts[acc].status = 'pending';
-            } else {
-                userAccounts[acc].status = 'approved';
-            }
-            localStorage.setItem('annam_user_accounts', JSON.stringify(userAccounts));
-            renderAdminLists();
-        }
-
-        function deleteUser(acc) {
-            if(confirm(`Xóa tài khoản ${acc}?`)) {
-                delete userAccounts[acc];
-                localStorage.setItem('annam_user_accounts', JSON.stringify(userAccounts));
-                renderAdminLists();
-            }
-        }
-
-        function addNewBigCategory() {
-            let name = document.getElementById('newBigCatName').value.trim();
-            if(!name) { alert('Nhập tên danh mục lớn!'); return; }
-            categories.push(name);
-            localStorage.setItem('annam_bigcats_v11', JSON.stringify(categories));
-            document.getElementById('newBigCatName').value = '';
-            renderAdminLists();
-            renderDriveTree();
-            alert('Thêm thành công!');
-        }
-
-        function deleteBigCategory(idx) {
-            if(confirm('Xóa danh mục lớn này?')) {
-                categories.splice(idx, 1);
-                localStorage.setItem('annam_bigcats_v11', JSON.stringify(categories));
-                renderAdminLists();
-                renderDriveTree();
-            }
-        }
-
-        function addNewSubCategory() {
-            let name = document.getElementById('newSubCatName').value.trim();
-            if(!name) { alert('Nhập tên chủ đề nhỏ!'); return; }
-            subCategories.push(name);
-            localStorage.setItem('annam_subcats_v11', JSON.stringify(subCategories));
-            document.getElementById('newSubCatName').value = '';
-            renderAdminLists();
-            renderDriveTree();
-            alert('Thêm thành công!');
-        }
-
-        function deleteSubCategory(idx) {
-            if(confirm('Xóa chủ đề này?')) {
-                subCategories.splice(idx, 1);
-                localStorage.setItem('annam_subcats_v11', JSON.stringify(subCategories));
-                renderAdminLists();
-                renderDriveTree();
-            }
-        }
-
-        function addNewCourse() {
-            let cat = document.getElementById('adminCat').value;
-            let lang = document.getElementById('adminLang').value;
-            let subCat = document.getElementById('adminSubCat').value;
-            let title = document.getElementById('adminTitle').value.trim();
-            let thumb = document.getElementById('adminThumb').value.trim();
-            let drive = document.getElementById('adminDrive').value.trim();
-
-            if(!title || !drive) { alert('Nhập tiêu đề và link Drive!'); return; }
-            let cleanId = extractDriveId(drive);
-            let newId = coursesData.length > 0 ? coursesData[coursesData.length - 1].id + 1 : 1;
-
-            coursesData.push({ id: newId, title: title, category: cat, lang: lang, subCat: subCat, age: '2-3 tuổi', driveId: cleanId, thumb: thumb });
-            localStorage.setItem('annam_courses_v11', JSON.stringify(coursesData));
-
-            document.getElementById('adminTitle').value = '';
-            document.getElementById('adminThumb').value = '';
-            document.getElementById('adminDrive').value = '';
-            renderAdminLists();
-            alert('Thêm bài học thành công!');
-        }
-
-        function deleteCourse(id) {
-            if(confirm('Xóa bài học này?')) {
-                coursesData = coursesData.filter(c => c.id !== id);
-                localStorage.setItem('annam_courses_v11', JSON.stringify(coursesData));
-                renderAdminLists();
-            }
-        }
-
-        function addNewGuide() {
-            let cat = document.getElementById('guideCat').value.trim();
-            let title = document.getElementById('guideTitle').value.trim();
-            let drive = document.getElementById('guideDrive').value.trim();
-
-            if(!cat || !title || !drive) { alert('Nhập đủ thông tin!'); return; }
-            let cleanId = extractDriveId(drive);
-            let newId = guideData.length > 0 ? guideData[guideData.length - 1].id + 1 : 1;
-
-            guideData.push({ id: newId, category: cat, title: title, driveId: cleanId, thumb: '' });
-            localStorage.setItem('annam_guides_v11', JSON.stringify(guideData));
-
-            document.getElementById('guideCat').value = '';
-            document.getElementById('guideTitle').value = '';
-            document.getElementById('guideDrive').value = '';
-            renderAdminLists();
-            alert('Thêm hướng dẫn thành công!');
-        }
-
-        function deleteGuide(id) {
-            if(confirm('Xóa hướng dẫn này?')) {
-                guideData = guideData.filter(g => g.id !== id);
-                localStorage.setItem('annam_guides_v11', JSON.stringify(guideData));
-                renderAdminLists();
-            }
-        }
+        });
     </script>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
