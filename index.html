@@ -8,10 +8,10 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
     
-    <!-- Tích hợp Firebase SDK & Cấu hình của mày -->
+    <!-- Tích hợp Firebase SDK -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { getFirestore, collection, getDocs, addDoc, deleteDoc, doc, setDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+        import { getFirestore, collection, getDocs, addDoc, deleteDoc, doc, setDoc, getDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyDvZzHsS8xklxzAXl5Zd2ZRVEWpdNgu-tY",
@@ -33,6 +33,8 @@
         window.deleteDoc = deleteDoc;
         window.doc = doc;
         window.setDoc = setDoc;
+        window.getDoc = getDoc;
+        window.updateDoc = updateDoc;
     </script>
 
     <style>
@@ -200,7 +202,7 @@
                         </svg>
                     </div>
                     <h3 class="fw-bold" style="color: var(--primary-dark);">Annambooks</h3>
-                    <p class="text-muted small mb-4">Hệ thống học liệu số độc quyền</p>
+                    <p class="text-muted small mb-4">Hệ thống học liệu số (Đã đồng bộ đám mây)</p>
                     
                     <!-- Form đăng nhập -->
                     <div id="loginForm" class="text-start">
@@ -296,7 +298,7 @@
                     <div class="tab-content">
                         <!-- Quản lý Tài khoản Khách & Phê duyệt -->
                         <div class="tab-pane fade show active" id="tabUser">
-                            <p class="text-muted small">Phê duyệt hoặc chặn các tài khoản đăng ký để kiểm soát người dùng truy cập hệ thống:</p>
+                            <p class="text-muted small">Phê duyệt hoặc chặn các tài khoản đăng ký trực tiếp trên mây:</p>
                             <div class="input-group mb-3">
                                 <input type="text" id="newAdminUser" class="form-control" placeholder="Tên đăng nhập / Email khách">
                                 <input type="password" id="newAdminPass" class="form-control" placeholder="Mật khẩu">
@@ -307,6 +309,7 @@
 
                         <!-- Quản lý Bài học -->
                         <div class="tab-pane fade" id="tabCourse">
+                            <input type="hidden" id="editCourseId" value="">
                             <div class="row">
                                 <div class="col-md-4 mb-3">
                                     <label class="form-label fw-bold">1. Danh mục lớn:</label>
@@ -339,9 +342,10 @@
                                 <label class="form-label fw-bold">Link Google Drive video bài học:</label>
                                 <input type="text" id="adminDrive" class="form-control" placeholder="Dán link chia sẻ hoặc mã ID Drive">
                             </div>
-                            <button class="btn btn-success-custom w-100" onclick="addNewCourse()">+ Thêm Bài Học Mới</button>
+                            <button id="courseSubmitBtn" class="btn btn-success-custom w-100" onclick="addNewCourse()">+ Thêm Bài Học Mới</button>
+                            <button id="courseCancelBtn" class="btn btn-secondary w-100 mt-2" onclick="resetCourseForm()" style="display:none;">Hủy Chỉnh Sửa</button>
                             <hr class="my-3">
-                            <div id="adminCourseList" style="max-height: 120px; overflow-y: auto;" class="border p-2 bg-light small"></div>
+                            <div id="adminCourseList" style="max-height: 140px; overflow-y: auto;" class="border p-2 bg-light small"></div>
                         </div>
 
                         <!-- Quản lý Danh mục Lớn -->
@@ -396,41 +400,30 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     
     <script>
-        let categories = JSON.parse(localStorage.getItem('annam_bigcats_v12')) || ['3000 thẻ điện tử', 'Kho audio tiếng việt trung anh', 'Khóa học nuôi dạy em bé'];
-        let subCategories = JSON.parse(localStorage.getItem('annam_subcats_v12')) || ['Hoa quả', 'Số đếm', 'Màu sắc', 'Động vật'];
-        
-        let coursesData = JSON.parse(localStorage.getItem('annam_courses_v12')) || [
-            { id: 1, title: 'Flashcard Hoa quả - Tiếng Việt', category: '3000 thẻ điện tử', lang: 'Tiếng Việt', subCat: 'Hoa quả', age: '2-3 tuổi', driveId: '1N6BK6C6wXKdTwsG1hzN6LOwtKSZwyvw7', thumb: '' }
-        ];
+        let categories = ['3000 thẻ điện tử', 'Kho audio tiếng việt trung anh', 'Khóa học nuôi dạy em bé'];
+        let subCategories = ['Hoa quả', 'Số đếm', 'Màu sắc', 'Động vật'];
+        let coursesData = [];
+        let guideData = [];
+        let userAccounts = {};
 
-        let guideData = JSON.parse(localStorage.getItem('annam_guides_v12')) || [
-            { id: 1, category: 'Khởi đầu', title: 'Hướng dẫn sử dụng kho học liệu', driveId: '1N6BK6C6wXKdTwsG1hzN6LOwtKSZwyvw7', thumb: '' }
-        ];
-
-        // Quản lý danh sách tài khoản khách (Lưu trạng thái duyệt)
-        let userAccounts = JSON.parse(localStorage.getItem('annam_user_accounts')) || {
-            'khachhang1@gmail.com': { pass: '123456', status: 'approved' }
-        };
-
-        // --- TẢI DỮ LIỆU TỪ FIREBASE FIRESTORE ---
+        // --- TẢI TOÀN BỘ DỮ LIỆU TỪ FIREBASE ---
         async function loadDataFromFirebase() {
             try {
                 if(!window.db) { setTimeout(loadDataFromFirebase, 300); return; }
                 
-                // Lấy danh sách bài học từ Firestore
+                // Lấy danh sách bài học
                 const courseSnap = await window.getDocs(window.collection(window.db, "courses"));
+                coursesData = [];
                 if (!courseSnap.empty) {
-                    coursesData = [];
                     courseSnap.forEach(d => {
-                        let data = d.data();
-                        coursesData.push({ id: d.id, ...data });
+                        coursesData.push({ id: d.id, ...d.data() });
                     });
                 }
 
-                // Lấy danh sách tài khoản người dùng từ Firestore
+                // Lấy danh sách tài khoản
                 const userSnap = await window.getDocs(window.collection(window.db, "users"));
+                userAccounts = {};
                 if (!userSnap.empty) {
-                    userAccounts = {};
                     userSnap.forEach(d => {
                         userAccounts[d.id] = d.data();
                     });
@@ -441,7 +434,7 @@
                     showHomeDashboard();
                 }
             } catch (e) {
-                console.log("Dùng localStorage dự phòng nếu chưa có kết nối mạng Firestore");
+                console.log("Lỗi tải Firebase:", e);
             }
         }
 
@@ -456,33 +449,39 @@
             document.getElementById('registerForm').style.display = isReg ? 'block' : 'none';
         }
 
-        // Đăng ký tài khoản mới (Đồng bộ lên Firebase)
         async function handleRegister() {
             let user = document.getElementById('regUser').value.trim();
             let pass = document.getElementById('regPass').value.trim();
 
             if(!user || !pass) { alert('Vui lòng điền đầy đủ thông tin!'); return; }
             if(user === 'annambooksadmin') { alert('Tên tài khoản này không được phép đăng ký!'); return; }
-            if(userAccounts[user]) { alert('Tài khoản này đã tồn tại!'); return; }
-
-            userAccounts[user] = { pass: pass, status: 'pending' };
-            localStorage.setItem('annam_user_accounts', JSON.stringify(userAccounts));
             
             try {
-                await window.setDoc(window.doc(window.db, "users", user), userAccounts[user]);
-            } catch(e) {}
-            
-            alert('Đăng ký thành công! Vui lòng chờ Admin phê duyệt tài khoản mới có thể đăng nhập.');
-            toggleAuth(false);
+                let userDocRef = window.doc(window.db, "users", user);
+                let userDocSnap = await window.getDoc(userDocRef);
+                if (userDocSnap.exists()) {
+                    alert('Tài khoản này đã tồn tại trên hệ thống!');
+                    return;
+                }
+
+                let newAcc = { pass: pass, status: 'pending' };
+                await window.setDoc(userDocRef, newAcc);
+                userAccounts[user] = newAcc;
+                
+                alert('Đăng ký thành công! Vui lòng chờ Admin phê duyệt tài khoản.');
+                toggleAuth(false);
+            } catch(e) {
+                alert('Lỗi kết nối đám mây: ' + e.message);
+            }
         }
 
-        // Đăng nhập
-        function handleLogin() {
+        async function handleLogin() {
             let user = document.getElementById('loginUser').value.trim();
             let pass = document.getElementById('loginPass').value.trim();
             let remember = document.getElementById('rememberMe').checked;
 
-            // Kiểm tra Admin tối cao
+            if(!user || !pass) { alert('Vui lòng nhập đầy đủ tài khoản và mật khẩu!'); return; }
+
             if(user === 'annambooksadmin' && pass === '09042021') {
                 if(remember) localStorage.setItem('rememberedUser', 'annambooksadmin');
                 sessionStorage.setItem('currentUser', 'annambooksadmin');
@@ -490,17 +489,28 @@
                 return;
             }
 
-            let acc = userAccounts[user];
-            if(acc && acc.pass === pass) {
-                if(acc.status !== 'approved') {
-                    alert('Tài khoản của bạn đang chờ Admin phê duyệt, vui lòng liên hệ quản trị viên!');
-                    return;
+            try {
+                let userDocRef = window.doc(window.db, "users", user);
+                let userDocSnap = await window.getDoc(userDocRef);
+
+                if (userDocSnap.exists()) {
+                    let acc = userDocSnap.data();
+                    if (acc.pass === pass) {
+                        if (acc.status !== 'approved') {
+                            alert('Tài khoản của bạn đang chờ Admin phê duyệt!');
+                            return;
+                        }
+                        if(remember) localStorage.setItem('rememberedUser', user);
+                        sessionStorage.setItem('currentUser', user);
+                        startApp(user);
+                    } else {
+                        alert('Mật khẩu không chính xác!');
+                    }
+                } else {
+                    alert('Tên đăng nhập không tồn tại trên hệ thống đám mây!');
                 }
-                if(remember) localStorage.setItem('rememberedUser', user);
-                sessionStorage.setItem('currentUser', user);
-                startApp(user);
-            } else {
-                alert('Tên đăng nhập hoặc mật khẩu không chính xác!');
+            } catch (e) {
+                alert('Lỗi kết nối đám mây khi đăng nhập: ' + e.message);
             }
         }
 
@@ -517,7 +527,7 @@
             document.getElementById('userEmailDisplay').innerText = `👤 ${username}`;
             document.getElementById('adminMenuBtn').style.display = (username === 'annambooksadmin') ? 'block' : 'none';
 
-            renderDriveTree();
+            loadDataFromFirebase();
             showHomeDashboard();
         }
 
@@ -735,34 +745,19 @@
             }
         }
 
-        // --- HƯỚNG DẪN SỬ DỤNG ---
         function showGuideList() {
             let area = document.getElementById('contentArea');
-            let html = `<h3 class="fw-bold mb-4" style="color: var(--primary-dark);">📖 Hướng Dẫn Sử Dụng</h3><div class="row">`;
-            guideData.forEach(g => {
-                let bgStyle = g.thumb ? `background-image: url('${g.thumb}');` : `background: var(--primary-dark);`;
-                html += `
-                    <div class="col-md-4 mb-4">
-                        <div class="card card-custom p-3 bg-white h-100 rounded-4">
-                            <div class="course-thumb mb-3" style="${bgStyle} cursor: pointer;" onclick="playCourseWithPlaylist('${g.id}', ${JSON.stringify(guideData).replace(/"/g, '&quot;')})">
-                                ▶ XEM HƯỚNG DẪN
-                            </div>
-                            <span class="badge bg-info text-dark mb-2 align-self-start">${g.category}</span>
-                            <h5 class="fw-bold text-dark">${g.title}</h5>
-                            <button class="btn btn-sm btn-success-custom mt-auto" onclick="playCourseWithPlaylist('${g.id}', ${JSON.stringify(guideData).replace(/"/g, '&quot;')})">Xem Ngay</button>
-                        </div>
-                    </div>
-                `;
-            });
-            html += `</div>`;
-            area.innerHTML = html;
+            area.innerHTML = `<h3 class="fw-bold mb-4" style="color: var(--primary-dark);">📖 Hướng Dẫn Sử Dụng</h3><p class="text-muted">Tính năng đang cập nhật.</p>`;
         }
 
         // --- ADMIN PANEL ---
         function openAdminPanel() {
-            renderAdminLists();
-            let myModal = new bootstrap.Modal(document.getElementById('adminModal'));
-            myModal.show();
+            loadDataFromFirebase();
+            setTimeout(() => {
+                renderAdminLists();
+                let myModal = new bootstrap.Modal(document.getElementById('adminModal'));
+                myModal.show();
+            }, 400);
         }
 
         function renderAdminLists() {
@@ -799,52 +794,41 @@
             categories.forEach((bc, idx) => {
                 bigCatHtml += `<div class="d-flex justify-content-between align-items-center border-bottom py-1">
                     <span><b>${bc}</b></span>
-                    <button class="btn btn-sm btn-danger py-0" onclick="deleteBigCategory(${idx})">Xóa</button>
                 </div>`;
             });
-            bigCatListDiv.innerHTML = bigCatHtml || 'Chưa có danh mục lớn.';
+            bigCatListDiv.innerHTML = bigCatHtml;
 
             let subListDiv = document.getElementById('adminSubCatList');
             let subHtml = '';
             subCategories.forEach((sc, idx) => {
                 subHtml += `<div class="d-flex justify-content-between align-items-center border-bottom py-1">
                     <span><b>${sc}</b></span>
-                    <button class="btn btn-sm btn-danger py-0" onclick="deleteSubCategory(${idx})">Xóa</button>
                 </div>`;
             });
-            subListDiv.innerHTML = subHtml || 'Chưa có chủ đề nhỏ.';
+            subListDiv.innerHTML = subHtml;
 
+            // Hiển thị danh sách bài học kèm nút Sửa và Xóa
             let cList = document.getElementById('adminCourseList');
             let cHtml = '';
             coursesData.forEach(c => {
+                let safeCourseStr = JSON.stringify(c).replace(/"/g, '&quot;');
                 cHtml += `<div class="d-flex justify-content-between align-items-center border-bottom py-1">
-                    <span><b>[${c.category} > ${c.lang} > ${c.subCat}]</b> ${c.title}</span>
-                    <button class="btn btn-sm btn-danger py-0" onclick="deleteCourse('${c.id}')">Xóa</button>
+                    <span class="text-truncate me-2" style="max-width: 55%;"><b>[${c.category} > ${c.lang}]</b> ${c.title}</span>
+                    <div>
+                        <button class="btn btn-sm btn-primary py-0" onclick="prepareEditCourse(${safeCourseStr})">Sửa</button>
+                        <button class="btn btn-sm btn-danger py-0 ms-1" onclick="deleteCourse('${c.id}')">Xóa</button>
+                    </div>
                 </div>`;
             });
             cList.innerHTML = cHtml || 'Chưa có bài học.';
-
-            let gList = document.getElementById('adminGuideList');
-            let gHtml = '';
-            guideData.forEach(g => {
-                gHtml += `<div class="d-flex justify-content-between align-items-center border-bottom py-1">
-                    <span><b>[${g.category}]</b> ${g.title}</span>
-                    <button class="btn btn-sm btn-danger py-0" onclick="deleteGuide(${g.id})">Xóa</button>
-                </div>`;
-            });
-            gList.innerHTML = gHtml || 'Chưa có hướng dẫn.';
         }
 
-        // Quản lý tài khoản từ phía Admin (Đồng bộ Firebase)
         async function adminAddUser() {
             let u = document.getElementById('newAdminUser').value.trim();
             let p = document.getElementById('newAdminPass').value.trim();
             if(!u || !p) { alert('Nhập đầy đủ thông tin tài khoản!'); return; }
-            if(userAccounts[u]) { alert('Tài khoản đã tồn tại!'); return; }
 
             userAccounts[u] = { pass: p, status: 'approved' };
-            localStorage.setItem('annam_user_accounts', JSON.stringify(userAccounts));
-            
             try {
                 await window.setDoc(window.doc(window.db, "users", u), userAccounts[u]);
             } catch(e) {}
@@ -852,24 +836,23 @@
             document.getElementById('newAdminUser').value = '';
             document.getElementById('newAdminPass').value = '';
             renderAdminLists();
-            alert('Thêm và cấp phép tài khoản thành công!');
+            alert('Thêm và cấp phép tài khoản thành công lên mây!');
         }
 
         async function toggleUserStatus(acc) {
             userAccounts[acc].status = (userAccounts[acc].status === 'approved') ? 'pending' : 'approved';
-            localStorage.setItem('annam_user_accounts', JSON.stringify(userAccounts));
-            
             try {
                 await window.setDoc(window.doc(window.db, "users", acc), userAccounts[acc]);
             } catch(e) {}
-            
             renderAdminLists();
         }
 
-        function deleteUser(acc) {
+        async function deleteUser(acc) {
             if(confirm(`Xóa tài khoản ${acc}?`)) {
                 delete userAccounts[acc];
-                localStorage.setItem('annam_user_accounts', JSON.stringify(userAccounts));
+                try {
+                    await window.deleteDoc(window.doc(window.db, "users", acc));
+                } catch(e) {}
                 renderAdminLists();
             }
         }
@@ -878,44 +861,25 @@
             let name = document.getElementById('newBigCatName').value.trim();
             if(!name) { alert('Nhập tên danh mục lớn!'); return; }
             categories.push(name);
-            localStorage.setItem('annam_bigcats_v12', JSON.stringify(categories));
             document.getElementById('newBigCatName').value = '';
             renderAdminLists();
             renderDriveTree();
             alert('Thêm thành công!');
         }
 
-        function deleteBigCategory(idx) {
-            if(confirm('Xóa danh mục lớn này?')) {
-                categories.splice(idx, 1);
-                localStorage.setItem('annam_bigcats_v12', JSON.stringify(categories));
-                renderAdminLists();
-                renderDriveTree();
-            }
-        }
-
         function addNewSubCategory() {
             let name = document.getElementById('newSubCatName').value.trim();
             if(!name) { alert('Nhập tên chủ đề nhỏ!'); return; }
             subCategories.push(name);
-            localStorage.setItem('annam_subcats_v12', JSON.stringify(subCategories));
             document.getElementById('newSubCatName').value = '';
             renderAdminLists();
             renderDriveTree();
             alert('Thêm thành công!');
         }
 
-        function deleteSubCategory(idx) {
-            if(confirm('Xóa chủ đề này?')) {
-                subCategories.splice(idx, 1);
-                localStorage.setItem('annam_subcats_v12', JSON.stringify(subCategories));
-                renderAdminLists();
-                renderDriveTree();
-            }
-        }
-
-        // Thêm bài học mới (Lưu trực tiếp lên đám mây Firestore)
+        // --- THÊM HOẶC CẬP NHẬT BÀI HỌC ---
         async function addNewCourse() {
+            let editId = document.getElementById('editCourseId').value;
             let cat = document.getElementById('adminCat').value;
             let lang = document.getElementById('adminLang').value;
             let subCat = document.getElementById('adminSubCat').value;
@@ -926,24 +890,52 @@
             if(!title || !drive) { alert('Nhập tiêu đề và link Drive!'); return; }
             let cleanId = extractDriveId(drive);
 
-            let newCourse = { title: title, category: cat, lang: lang, subCat: subCat, age: '2-3 tuổi', driveId: cleanId, thumb: thumb };
+            let courseData = { title: title, category: cat, lang: lang, subCat: subCat, age: '2-3 tuổi', driveId: cleanId, thumb: thumb };
             
             try {
-                let docRef = await window.addDoc(window.collection(window.db, "courses"), newCourse);
-                newCourse.id = docRef.id;
+                if(editId) {
+                    // Cập nhật bài học cũ trên Firebase
+                    await window.updateDoc(window.doc(window.db, "courses", editId), courseData);
+                    let idx = coursesData.findIndex(c => String(c.id) === String(editId));
+                    if(idx > -1) { coursesData[idx] = { id: editId, ...courseData }; }
+                    alert('Cập nhật bài học thành công!');
+                } else {
+                    // Thêm mới bài học lên Firebase
+                    let docRef = await window.addDoc(window.collection(window.db, "courses"), courseData);
+                    courseData.id = docRef.id;
+                    coursesData.push(courseData);
+                    alert('Thêm bài học mới lên mây thành công!');
+                }
+                resetCourseForm();
+                renderAdminLists();
+                showHomeDashboard();
             } catch(e) {
-                newCourse.id = 'local_' + Date.now();
+                alert('Lỗi lưu bài học: ' + e.message);
             }
+        }
 
-            coursesData.push(newCourse);
-            localStorage.setItem('annam_courses_v12', JSON.stringify(coursesData));
+        // Đưa dữ liệu bài học lên form để sửa
+        function prepareEditCourse(course) {
+            document.getElementById('editCourseId').value = course.id;
+            document.getElementById('adminCat').value = course.category || categories[0];
+            document.getElementById('adminLang').value = course.lang || 'Tiếng Việt';
+            document.getElementById('adminSubCat').value = course.subCat || subCategories[0];
+            document.getElementById('adminTitle').value = course.title || '';
+            document.getElementById('adminThumb').value = course.thumb || '';
+            document.getElementById('adminDrive').value = course.driveId || '';
 
+            document.getElementById('courseSubmitBtn').innerText = '💾 Lưu Thay Đổi';
+            document.getElementById('courseCancelBtn').style.display = 'block';
+        }
+
+        function resetCourseForm() {
+            document.getElementById('editCourseId').value = '';
             document.getElementById('adminTitle').value = '';
             document.getElementById('adminThumb').value = '';
             document.getElementById('adminDrive').value = '';
-            renderAdminLists();
-            showHomeDashboard();
-            alert('Thêm bài học mới lên mây thành công!');
+
+            document.getElementById('courseSubmitBtn').innerText = '+ Thêm Bài Học Mới';
+            document.getElementById('courseCancelBtn').style.display = 'none';
         }
 
         async function deleteCourse(id) {
@@ -952,36 +944,10 @@
                     await window.deleteDoc(window.doc(window.db, "courses", String(id)));
                 } catch(e) {}
                 coursesData = coursesData.filter(c => String(c.id) !== String(id));
-                localStorage.setItem('annam_courses_v12', JSON.stringify(coursesData));
+                resetCourseForm();
                 renderAdminLists();
                 showHomeDashboard();
-            }
-        }
-
-        function addNewGuide() {
-            let cat = document.getElementById('guideCat').value.trim();
-            let title = document.getElementById('guideTitle').value.trim();
-            let drive = document.getElementById('guideDrive').value.trim();
-
-            if(!cat || !title || !drive) { alert('Nhập đủ thông tin!'); return; }
-            let cleanId = extractDriveId(drive);
-            let newId = guideData.length > 0 ? Number(guideData[guideData.length - 1].id) + 1 : 1;
-
-            guideData.push({ id: newId, category: cat, title: title, driveId: cleanId, thumb: '' });
-            localStorage.setItem('annam_guides_v12', JSON.stringify(guideData));
-
-            document.getElementById('guideCat').value = '';
-            document.getElementById('guideTitle').value = '';
-            document.getElementById('guideDrive').value = '';
-            renderAdminLists();
-            alert('Thêm hướng dẫn thành công!');
-        }
-
-        function deleteGuide(id) {
-            if(confirm('Xóa hướng dẫn này?')) {
-                guideData = guideData.filter(g => g.id !== id);
-                localStorage.setItem('annam_guides_v12', JSON.stringify(guideData));
-                renderAdminLists();
+                alert('Đã xóa thành công!');
             }
         }
     </script>
