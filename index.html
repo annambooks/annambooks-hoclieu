@@ -345,7 +345,7 @@
                             <button id="courseSubmitBtn" class="btn btn-success-custom w-100" onclick="addNewCourse()">+ Thêm Bài Học Mới</button>
                             <button id="courseCancelBtn" class="btn btn-secondary w-100 mt-2" onclick="resetCourseForm()" style="display:none;">Hủy Chỉnh Sửa</button>
                             <hr class="my-3">
-                            <div id="adminCourseList" style="max-height: 140px; overflow-y: auto;" class="border p-2 bg-light small"></div>
+                            <div id="adminCourseList" style="max-height: 120px; overflow-y: auto;" class="border p-2 bg-light small"></div>
                         </div>
 
                         <!-- Quản lý Danh mục Lớn -->
@@ -372,21 +372,23 @@
 
                         <!-- Quản lý Hướng dẫn -->
                         <div class="tab-pane fade" id="tabGuide">
+                            <input type="hidden" id="editGuideId" value="">
                             <div class="row">
                                 <div class="col-md-6 mb-3">
                                     <label class="form-label fw-bold">Chủ đề lớn:</label>
-                                    <input type="text" id="guideCat" class="form-control" placeholder="Chủ đề">
+                                    <input type="text" id="guideCat" class="form-control" placeholder="Chủ đề hướng dẫn">
                                 </div>
                                 <div class="col-md-6 mb-3">
                                     <label class="form-label fw-bold">Tiêu đề:</label>
-                                    <input type="text" id="guideTitle" class="form-control" placeholder="Tiêu đề video">
+                                    <input type="text" id="guideTitle" class="form-control" placeholder="Tiêu đề video hướng dẫn">
                                 </div>
                             </div>
                             <div class="mb-3">
                                 <label class="form-label fw-bold">Link Drive hướng dẫn:</label>
-                                <input type="text" id="guideDrive" class="form-control" placeholder="Dán link Drive">
+                                <input type="text" id="guideDrive" class="form-control" placeholder="Dán link Drive hoặc ID video">
                             </div>
-                            <button class="btn btn-success-custom w-100" onclick="addNewGuide()">+ Thêm Video Hướng Dẫn</button>
+                            <button id="guideSubmitBtn" class="btn btn-success-custom w-100" onclick="addNewGuide()">+ Thêm Video Hướng Dẫn</button>
+                            <button id="guideCancelBtn" class="btn btn-secondary w-100 mt-2" onclick="resetGuideForm()" style="display:none;">Hủy Chỉnh Sửa</button>
                             <hr class="my-3">
                             <div id="adminGuideList" style="max-height: 120px; overflow-y: auto;" class="border p-2 bg-light small"></div>
                         </div>
@@ -420,6 +422,15 @@
                     });
                 }
 
+                // Lấy danh sách hướng dẫn từ Firebase
+                const guideSnap = await window.getDocs(window.collection(window.db, "guides"));
+                guideData = [];
+                if (!guideSnap.empty) {
+                    guideSnap.forEach(d => {
+                        guideData.push({ id: d.id, ...d.data() });
+                    });
+                }
+
                 // Lấy danh sách tài khoản
                 const userSnap = await window.getDocs(window.collection(window.db, "users"));
                 userAccounts = {};
@@ -431,7 +442,11 @@
 
                 renderDriveTree();
                 if(document.getElementById('mainScreen').classList.contains('active')) {
-                    showHomeDashboard();
+                    if(document.getElementById('viewTitle') && document.getElementById('viewTitle').innerText.includes('Hướng Dẫn')) {
+                        showGuideList();
+                    } else {
+                        showHomeDashboard();
+                    }
                 }
             } catch (e) {
                 console.log("Lỗi tải Firebase:", e);
@@ -745,9 +760,31 @@
             }
         }
 
+        // --- HIỂN THỊ HƯỚNG DẪN SỬ DỤNG NGOÀI TRANG CHỦ ---
         function showGuideList() {
             let area = document.getElementById('contentArea');
-            area.innerHTML = `<h3 class="fw-bold mb-4" style="color: var(--primary-dark);">📖 Hướng Dẫn Sử Dụng</h3><p class="text-muted">Tính năng đang cập nhật.</p>`;
+            let html = `<h3 class="fw-bold mb-4" style="color: var(--primary-dark);">📖 Hướng Dẫn Sử Dụng</h3><div class="row">`;
+            
+            if(guideData.length === 0) {
+                html += `<p class="text-muted p-3">Chưa có video hướng dẫn nào được cập nhật.</p>`;
+            } else {
+                guideData.forEach(g => {
+                    let cleanId = extractDriveId(g.driveId);
+                    html += `
+                        <div class="col-md-6 mb-4">
+                            <div class="card card-custom p-3 bg-white h-100 rounded-4">
+                                <span class="badge bg-success mb-2 align-self-start">${g.category || 'Hướng dẫn'}</span>
+                                <h5 class="fw-bold text-dark mb-3">${g.title}</h5>
+                                <div class="ratio ratio-16x9 bg-black rounded overflow-hidden">
+                                    <iframe src="https://drive.google.com/file/d/${cleanId}/preview" allow="autoplay" allowfullscreen></iframe>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                });
+            }
+            html += `</div>`;
+            area.innerHTML = html;
         }
 
         // --- ADMIN PANEL ---
@@ -807,7 +844,7 @@
             });
             subListDiv.innerHTML = subHtml;
 
-            // Hiển thị danh sách bài học kèm nút Sửa và Xóa
+            // Danh sách bài học
             let cList = document.getElementById('adminCourseList');
             let cHtml = '';
             coursesData.forEach(c => {
@@ -821,6 +858,21 @@
                 </div>`;
             });
             cList.innerHTML = cHtml || 'Chưa có bài học.';
+
+            // Danh sách Hướng dẫn kèm nút Sửa và Xóa
+            let gList = document.getElementById('adminGuideList');
+            let gHtml = '';
+            guideData.forEach(g => {
+                let safeGuideStr = JSON.stringify(g).replace(/"/g, '&quot;');
+                gHtml += `<div class="d-flex justify-content-between align-items-center border-bottom py-1">
+                    <span class="text-truncate me-2" style="max-width: 55%;"><b>[${g.category}]</b> ${g.title}</span>
+                    <div>
+                        <button class="btn btn-sm btn-primary py-0" onclick="prepareEditGuide(${safeGuideStr})">Sửa</button>
+                        <button class="btn btn-sm btn-danger py-0 ms-1" onclick="deleteGuide('${g.id}')">Xóa</button>
+                    </div>
+                </div>`;
+            });
+            gList.innerHTML = gHtml || 'Chưa có video hướng dẫn.';
         }
 
         async function adminAddUser() {
@@ -877,7 +929,7 @@
             alert('Thêm thành công!');
         }
 
-        // --- THÊM HOẶC CẬP NHẬT BÀI HỌC ---
+        // --- QUẢN LÝ THÊM/SỬA BÀI HỌC ---
         async function addNewCourse() {
             let editId = document.getElementById('editCourseId').value;
             let cat = document.getElementById('adminCat').value;
@@ -894,13 +946,11 @@
             
             try {
                 if(editId) {
-                    // Cập nhật bài học cũ trên Firebase
                     await window.updateDoc(window.doc(window.db, "courses", editId), courseData);
                     let idx = coursesData.findIndex(c => String(c.id) === String(editId));
                     if(idx > -1) { coursesData[idx] = { id: editId, ...courseData }; }
                     alert('Cập nhật bài học thành công!');
                 } else {
-                    // Thêm mới bài học lên Firebase
                     let docRef = await window.addDoc(window.collection(window.db, "courses"), courseData);
                     courseData.id = docRef.id;
                     coursesData.push(courseData);
@@ -914,7 +964,6 @@
             }
         }
 
-        // Đưa dữ liệu bài học lên form để sửa
         function prepareEditCourse(course) {
             document.getElementById('editCourseId').value = course.id;
             document.getElementById('adminCat').value = course.category || categories[0];
@@ -947,6 +996,69 @@
                 resetCourseForm();
                 renderAdminLists();
                 showHomeDashboard();
+                alert('Đã xóa thành công!');
+            }
+        }
+
+        // --- QUẢN LÝ THÊM/SỬA HƯỚNG DẪN ---
+        async function addNewGuide() {
+            let editId = document.getElementById('editGuideId').value;
+            let cat = document.getElementById('guideCat').value.trim();
+            let title = document.getElementById('guideTitle').value.trim();
+            let drive = document.getElementById('guideDrive').value.trim();
+
+            if(!cat || !title || !drive) { alert('Vui lòng điền đầy đủ chủ đề, tiêu đề và link Drive hướng dẫn!'); return; }
+            let cleanId = extractDriveId(drive);
+
+            let guideObj = { category: cat, title: title, driveId: cleanId };
+
+            try {
+                if(editId) {
+                    await window.updateDoc(window.doc(window.db, "guides", editId), guideObj);
+                    let idx = guideData.findIndex(g => String(g.id) === String(editId));
+                    if(idx > -1) { guideData[idx] = { id: editId, ...guideObj }; }
+                    alert('Cập nhật video hướng dẫn thành công!');
+                } else {
+                    let docRef = await window.addDoc(window.collection(window.db, "guides"), guideObj);
+                    guideObj.id = docRef.id;
+                    guideData.push(guideObj);
+                    alert('Thêm video hướng dẫn lên mây thành công!');
+                }
+                resetGuideForm();
+                renderAdminLists();
+            } catch(e) {
+                alert('Lỗi lưu hướng dẫn: ' + e.message);
+            }
+        }
+
+        function prepareEditGuide(guide) {
+            document.getElementById('editGuideId').value = guide.id;
+            document.getElementById('guideCat').value = guide.category || '';
+            document.getElementById('guideTitle').value = guide.title || '';
+            document.getElementById('guideDrive').value = guide.driveId || '';
+
+            document.getElementById('guideSubmitBtn').innerText = '💾 Lưu Thay Đổi Hướng Dẫn';
+            document.getElementById('guideCancelBtn').style.display = 'block';
+        }
+
+        function resetGuideForm() {
+            document.getElementById('editGuideId').value = '';
+            document.getElementById('guideCat').value = '';
+            document.getElementById('guideTitle').value = '';
+            document.getElementById('guideDrive').value = '';
+
+            document.getElementById('guideSubmitBtn').innerText = '+ Thêm Video Hướng Dẫn';
+            document.getElementById('guideCancelBtn').style.display = 'none';
+        }
+
+        async function deleteGuide(id) {
+            if(confirm('Xóa video hướng dẫn này khỏi đám mây?')) {
+                try {
+                    await window.deleteDoc(window.doc(window.db, "guides", String(id)));
+                } catch(e) {}
+                guideData = guideData.filter(g => String(g.id) !== String(id));
+                resetGuideForm();
+                renderAdminLists();
                 alert('Đã xóa thành công!');
             }
         }
