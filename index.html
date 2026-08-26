@@ -136,21 +136,6 @@
 
         .view-section { display: none; }
         .view-section.active { display: block; }
-
-        .course-thumb {
-            height: 150px;
-            background-size: cover;
-            background-position: center;
-            border-radius: 8px;
-            display: flex;
-            align-items: flex-end;
-            justify-content: center;
-            padding-bottom: 10px;
-            font-weight: bold;
-            color: white;
-            text-shadow: 0 1px 3px rgba(0,0,0,0.8);
-            position: relative;
-        }
         
         .fav-btn {
             position: absolute;
@@ -167,6 +152,7 @@
             box-shadow: 0 2px 4px rgba(0,0,0,0.1);
             color: #cbd5e1;
             cursor: pointer;
+            z-index: 10;
         }
         .fav-btn.active { color: #dc2626; }
 
@@ -328,15 +314,9 @@
                                     <select id="adminSubCat" class="form-select"></select>
                                 </div>
                             </div>
-                            <div class="row">
-                                <div class="col-md-6 mb-3">
-                                    <label class="form-label fw-bold">Tiêu đề bài học:</label>
-                                    <input type="text" id="adminTitle" class="form-control" placeholder="Ví dụ: Flashcard Hoa quả">
-                                </div>
-                                <div class="col-md-6 mb-3">
-                                    <label class="form-label fw-bold text-success">Link Hình Ảnh Bìa (URL):</label>
-                                    <input type="text" id="adminThumb" class="form-control" placeholder="Dán link ảnh minh họa">
-                                </div>
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">Tiêu đề bài học:</label>
+                                <input type="text" id="adminTitle" class="form-control" placeholder="Ví dụ: Flashcard Hoa quả">
                             </div>
                             <div class="mb-3">
                                 <label class="form-label fw-bold">Link Google Drive video bài học:</label>
@@ -373,15 +353,13 @@
                         <!-- Quản lý Hướng dẫn -->
                         <div class="tab-pane fade" id="tabGuide">
                             <input type="hidden" id="editGuideId" value="">
-                            <div class="row">
-                                <div class="col-md-6 mb-3">
-                                    <label class="form-label fw-bold">Chủ đề lớn:</label>
-                                    <input type="text" id="guideCat" class="form-control" placeholder="Chủ đề hướng dẫn">
-                                </div>
-                                <div class="col-md-6 mb-3">
-                                    <label class="form-label fw-bold">Tiêu đề:</label>
-                                    <input type="text" id="guideTitle" class="form-control" placeholder="Tiêu đề video hướng dẫn">
-                                </div>
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">Chủ đề lớn:</label>
+                                <input type="text" id="guideCat" class="form-control" placeholder="Chủ đề hướng dẫn">
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">Tiêu đề:</label>
+                                <input type="text" id="guideTitle" class="form-control" placeholder="Tiêu đề video hướng dẫn">
                             </div>
                             <div class="mb-3">
                                 <label class="form-label fw-bold">Link Drive hướng dẫn:</label>
@@ -642,15 +620,18 @@
             } else {
                 filtered.forEach(item => {
                     let isFav = favs.includes(item.id);
-                    let bgStyle = item.thumb ? `background-image: url('${item.thumb}');` : `background: linear-gradient(135deg, #064e3b, #10b981);`;
+                    let cleanId = extractDriveId(item.driveId);
+                    
                     html += `
                         <div class="col-md-4 mb-4">
                             <div class="card card-custom p-3 bg-white h-100 rounded-4">
-                                <div class="course-thumb mb-3" style="${bgStyle} cursor: pointer;" onclick="playCourseWithPlaylist('${item.id}', ${JSON.stringify(filtered).replace(/"/g, '&quot;')})">
+                                <div class="position-relative mb-3">
                                     <button class="fav-btn ${isFav ? 'active' : ''}" onclick="toggleFavorite('${item.id}', event)">
                                         <i class="bi bi-heart-fill"></i>
                                     </button>
-                                    <span>▶ XEM VIDEO</span>
+                                    <div class="ratio ratio-16x9 bg-black rounded overflow-hidden" style="cursor: pointer;" onclick="playCourseWithPlaylist('${item.id}', ${JSON.stringify(filtered).replace(/"/g, '&quot;')})">
+                                        <iframe src="https://drive.google.com/file/d/${cleanId}/preview" style="pointer-events: none;" allow="autoplay"></iframe>
+                                    </div>
                                 </div>
                                 <div class="mb-2">
                                     <span class="badge bg-success">${item.lang || ''}</span>
@@ -763,7 +744,7 @@
         // --- HIỂN THỊ HƯỚNG DẪN SỬ DỤNG NGOÀI TRANG CHỦ ---
         function showGuideList() {
             let area = document.getElementById('contentArea');
-            let html = `<h3 class="fw-bold mb-4" style="color: var(--primary-dark);">📖 Hướng Dẫn Sử Dụng</h3><div class="row">`;
+            let html = `<h3 class="fw-bold mb-4" style="color: var(--primary-dark);" id="viewTitle">📖 Hướng Dẫn Sử Dụng</h3><div class="row">`;
             
             if(guideData.length === 0) {
                 html += `<p class="text-muted p-3">Chưa có video hướng dẫn nào được cập nhật.</p>`;
@@ -859,7 +840,7 @@
             });
             cList.innerHTML = cHtml || 'Chưa có bài học.';
 
-            // Danh sách Hướng dẫn kèm nút Sửa và Xóa
+            // Danh sách Hướng dẫn
             let gList = document.getElementById('adminGuideList');
             let gHtml = '';
             guideData.forEach(g => {
@@ -936,13 +917,12 @@
             let lang = document.getElementById('adminLang').value;
             let subCat = document.getElementById('adminSubCat').value;
             let title = document.getElementById('adminTitle').value.trim();
-            let thumb = document.getElementById('adminThumb').value.trim();
             let drive = document.getElementById('adminDrive').value.trim();
 
             if(!title || !drive) { alert('Nhập tiêu đề và link Drive!'); return; }
             let cleanId = extractDriveId(drive);
 
-            let courseData = { title: title, category: cat, lang: lang, subCat: subCat, age: '2-3 tuổi', driveId: cleanId, thumb: thumb };
+            let courseData = { title: title, category: cat, lang: lang, subCat: subCat, age: '2-3 tuổi', driveId: cleanId };
             
             try {
                 if(editId) {
@@ -970,7 +950,6 @@
             document.getElementById('adminLang').value = course.lang || 'Tiếng Việt';
             document.getElementById('adminSubCat').value = course.subCat || subCategories[0];
             document.getElementById('adminTitle').value = course.title || '';
-            document.getElementById('adminThumb').value = course.thumb || '';
             document.getElementById('adminDrive').value = course.driveId || '';
 
             document.getElementById('courseSubmitBtn').innerText = '💾 Lưu Thay Đổi';
@@ -980,7 +959,6 @@
         function resetCourseForm() {
             document.getElementById('editCourseId').value = '';
             document.getElementById('adminTitle').value = '';
-            document.getElementById('adminThumb').value = '';
             document.getElementById('adminDrive').value = '';
 
             document.getElementById('courseSubmitBtn').innerText = '+ Thêm Bài Học Mới';
