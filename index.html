@@ -330,22 +330,26 @@
 
                         <!-- Quản lý Danh mục Lớn -->
                         <div class="tab-pane fade" id="tabBigCat">
+                            <input type="hidden" id="editBigCatId" value="">
                             <div class="mb-3">
-                                <label class="form-label fw-bold">Tên Danh Mục Lớn Mới:</label>
+                                <label class="form-label fw-bold">Tên Danh Mục Lớn:</label>
                                 <input type="text" id="newBigCatName" class="form-control" placeholder="Nhập danh mục lớn">
                             </div>
-                            <button class="btn btn-success-custom w-100" onclick="addNewBigCategory()">+ Thêm Danh Mục Lớn</button>
+                            <button id="bigCatSubmitBtn" class="btn btn-success-custom w-100" onclick="addNewBigCategory()">+ Thêm Danh Mục Lớn</button>
+                            <button id="bigCatCancelBtn" class="btn btn-secondary w-100 mt-2" onclick="resetBigCatForm()" style="display:none;">Hủy Chỉnh Sửa</button>
                             <hr class="my-3">
                             <div id="adminBigCatList" style="max-height: 150px; overflow-y: auto;" class="border p-2 bg-light small"></div>
                         </div>
 
                         <!-- Quản lý Chủ đề nhỏ -->
                         <div class="tab-pane fade" id="tabSubCat">
+                            <input type="hidden" id="editSubCatId" value="">
                             <div class="mb-3">
-                                <label class="form-label fw-bold">Tên chủ đề nhỏ mới:</label>
+                                <label class="form-label fw-bold">Tên chủ đề nhỏ:</label>
                                 <input type="text" id="newSubCatName" class="form-control" placeholder="Nhập chủ đề nhỏ">
                             </div>
-                            <button class="btn btn-success-custom w-100" onclick="addNewSubCategory()">+ Thêm Chủ Đề Nhỏ</button>
+                            <button id="subCatSubmitBtn" class="btn btn-success-custom w-100" onclick="addNewSubCategory()">+ Thêm Chủ Đề Nhỏ</button>
+                            <button id="subCatCancelBtn" class="btn btn-secondary w-100 mt-2" onclick="resetSubCatForm()" style="display:none;">Hủy Chỉnh Sửa</button>
                             <hr class="my-3">
                             <div id="adminSubCatList" style="max-height: 150px; overflow-y: auto;" class="border p-2 bg-light small"></div>
                         </div>
@@ -380,8 +384,8 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     
     <script>
-        let categories = ['3000 thẻ điện tử', 'Kho audio tiếng việt trung anh', 'Khóa học nuôi dạy em bé'];
-        let subCategories = ['Hoa quả', 'Số đếm', 'Màu sắc', 'Động vật'];
+        let categories = [];
+        let subCategories = [];
         let coursesData = [];
         let guideData = [];
         let userAccounts = {};
@@ -391,6 +395,36 @@
             try {
                 if(!window.db) { setTimeout(loadDataFromFirebase, 300); return; }
                 
+                // Lấy danh mục lớn từ Firebase
+                const catSnap = await window.getDocs(window.collection(window.db, "categories"));
+                categories = [];
+                if (!catSnap.empty) {
+                    catSnap.forEach(d => { categories.push({ id: d.id, name: d.data().name }); });
+                }
+                if(categories.length === 0) {
+                    // Mặc định nếu trống
+                    categories = [
+                        { id: 'c1', name: '3000 thẻ điện tử' },
+                        { id: 'c2', name: 'Kho audio tiếng việt trung anh' },
+                        { id: 'c3', name: 'Khóa học nuôi dạy em bé' }
+                    ];
+                }
+
+                // Lấy chủ đề nhỏ từ Firebase
+                const subSnap = await window.getDocs(window.collection(window.db, "subcategories"));
+                subCategories = [];
+                if (!subSnap.empty) {
+                    subSnap.forEach(d => { subCategories.push({ id: d.id, name: d.data().name }); });
+                }
+                if(subCategories.length === 0) {
+                    subCategories = [
+                        { id: 's1', name: 'Hoa quả' },
+                        { id: 's2', name: 'Số đếm' },
+                        { id: 's3', name: 'Màu sắc' },
+                        { id: 's4', name: 'Động vật' }
+                    ];
+                }
+
                 // Lấy danh sách bài học
                 const courseSnap = await window.getDocs(window.collection(window.db, "courses"));
                 coursesData = [];
@@ -529,11 +563,12 @@
             let treeContainer = document.getElementById('driveTreeView');
             let html = '';
 
-            categories.forEach((cat, catIdx) => {
+            categories.forEach((catObj, catIdx) => {
+                let catName = catObj.name;
                 html += `
                     <div class="mb-1">
                         <button class="tree-folder-btn" onclick="toggleFolder('folder_${catIdx}')">
-                            <span><i class="bi bi-folder-fill text-warning me-2"></i> ${cat}</span>
+                            <span><i class="bi bi-folder-fill text-warning me-2"></i> ${catName}</span>
                             <i class="bi bi-chevron-down small"></i>
                         </button>
                         <div class="tree-sub-container" id="folder_${catIdx}">
@@ -549,8 +584,9 @@
                             <div class="tree-sub-container ms-3" id="sub_${catIdx}_${lang}">
                     `;
 
-                    subCategories.forEach(sc => {
-                        html += `<a href="#" class="tree-item" onclick="filterByDrivePath('${cat}', '${lang}', '${sc}')"><i class="bi bi-file-earmark-play me-2"></i> ${sc}</a>`;
+                    subCategories.forEach(subObj => {
+                        let subName = subObj.name;
+                        html += `<a href="#" class="tree-item" onclick="filterByDrivePath('${catName}', '${lang}', '${subName}')"><i class="bi bi-file-earmark-play me-2"></i> ${subName}</a>`;
                     });
 
                     html += `</div></div>`;
@@ -801,26 +837,38 @@
 
             let catSelect = document.getElementById('adminCat');
             catSelect.innerHTML = '';
-            categories.forEach(c => { catSelect.innerHTML += `<option value="${c}">${c}</option>`; });
+            categories.forEach(c => { catSelect.innerHTML += `<option value="${c.name}">${c.name}</option>`; });
 
             let subSelect = document.getElementById('adminSubCat');
             subSelect.innerHTML = '';
-            subCategories.forEach(sc => { subSelect.innerHTML += `<option value="${sc}">${sc}</option>`; });
+            subCategories.forEach(sc => { subSelect.innerHTML += `<option value="${sc.name}">${sc.name}</option>`; });
 
+            // Danh sách Danh mục lớn
             let bigCatListDiv = document.getElementById('adminBigCatList');
             let bigCatHtml = '';
-            categories.forEach((bc, idx) => {
+            categories.forEach(bc => {
+                let safeBc = JSON.stringify(bc).replace(/"/g, '&quot;');
                 bigCatHtml += `<div class="d-flex justify-content-between align-items-center border-bottom py-1">
-                    <span><b>${bc}</b></span>
+                    <span><b>${bc.name}</b></span>
+                    <div>
+                        <button class="btn btn-sm btn-primary py-0" onclick="prepareEditBigCat(${safeBc})">Sửa</button>
+                        <button class="btn btn-sm btn-danger py-0 ms-1" onclick="deleteBigCategory('${bc.id}')">Xóa</button>
+                    </div>
                 </div>`;
             });
             bigCatListDiv.innerHTML = bigCatHtml;
 
+            // Danh sách Chủ đề nhỏ
             let subListDiv = document.getElementById('adminSubCatList');
             let subHtml = '';
-            subCategories.forEach((sc, idx) => {
+            subCategories.forEach(sc => {
+                let safeSc = JSON.stringify(sc).replace(/"/g, '&quot;');
                 subHtml += `<div class="d-flex justify-content-between align-items-center border-bottom py-1">
-                    <span><b>${sc}</b></span>
+                    <span><b>${sc.name}</b></span>
+                    <div>
+                        <button class="btn btn-sm btn-primary py-0" onclick="prepareEditSubCat(${safeSc})">Sửa</button>
+                        <button class="btn btn-sm btn-danger py-0 ms-1" onclick="deleteSubCategory('${sc.id}')">Xóa</button>
+                    </div>
                 </div>`;
             });
             subListDiv.innerHTML = subHtml;
@@ -890,24 +938,112 @@
             }
         }
 
-        function addNewBigCategory() {
+        // --- QUẢN LÝ DANH MỤC LỚN ---
+        async function addNewBigCategory() {
+            let editId = document.getElementById('editBigCatId').value;
             let name = document.getElementById('newBigCatName').value.trim();
             if(!name) { alert('Nhập tên danh mục lớn!'); return; }
-            categories.push(name);
-            document.getElementById('newBigCatName').value = '';
-            renderAdminLists();
-            renderDriveTree();
-            alert('Thêm thành công!');
+
+            try {
+                if(editId) {
+                    await window.updateDoc(window.doc(window.db, "categories", editId), { name: name });
+                    let idx = categories.findIndex(c => String(c.id) === String(editId));
+                    if(idx > -1) categories[idx].name = name;
+                    alert('Cập nhật danh mục lớn thành công!');
+                } else {
+                    let docRef = await window.addDoc(window.collection(window.db, "categories"), { name: name });
+                    categories.push({ id: docRef.id, name: name });
+                    alert('Thêm danh mục lớn lên mây thành công!');
+                }
+                resetBigCatForm();
+                renderAdminLists();
+                renderDriveTree();
+            } catch(e) {
+                alert('Lỗi: ' + e.message);
+            }
         }
 
-        function addNewSubCategory() {
+        function prepareEditBigCat(cat) {
+            document.getElementById('editBigCatId').value = cat.id;
+            document.getElementById('newBigCatName').value = cat.name;
+            document.getElementById('bigCatSubmitBtn').innerText = '💾 Lưu Thay Đổi';
+            document.getElementById('bigCatCancelBtn').style.display = 'block';
+        }
+
+        function resetBigCatForm() {
+            document.getElementById('editBigCatId').value = '';
+            document.getElementById('newBigCatName').value = '';
+            document.getElementById('bigCatSubmitBtn').innerText = '+ Thêm Danh Mục Lớn';
+            document.getElementById('bigCatCancelBtn').style.display = 'none';
+        }
+
+        async function deleteBigCategory(id) {
+            if(confirm('Xóa danh mục lớn này?')) {
+                try {
+                    await window.deleteDoc(window.doc(window.db, "categories", String(id)));
+                    categories = categories.filter(c => String(c.id) !== String(id));
+                    resetBigCatForm();
+                    renderAdminLists();
+                    renderDriveTree();
+                    alert('Đã xóa thành công!');
+                } catch(e) {
+                    alert('Lỗi xóa: ' + e.message);
+                }
+            }
+        }
+
+        // --- QUẢN LÝ CHỦ ĐỀ NHỎ ---
+        async function addNewSubCategory() {
+            let editId = document.getElementById('editSubCatId').value;
             let name = document.getElementById('newSubCatName').value.trim();
             if(!name) { alert('Nhập tên chủ đề nhỏ!'); return; }
-            subCategories.push(name);
+
+            try {
+                if(editId) {
+                    await window.updateDoc(window.doc(window.db, "subcategories", editId), { name: name });
+                    let idx = subCategories.findIndex(s => String(s.id) === String(editId));
+                    if(idx > -1) subCategories[idx].name = name;
+                    alert('Cập nhật chủ đề nhỏ thành công!');
+                } else {
+                    let docRef = await window.addDoc(window.collection(window.db, "subcategories"), { name: name });
+                    subCategories.push({ id: docRef.id, name: name });
+                    alert('Thêm chủ đề nhỏ lên mây thành công!');
+                }
+                resetSubCatForm();
+                renderAdminLists();
+                renderDriveTree();
+            } catch(e) {
+                alert('Lỗi: ' + e.message);
+            }
+        }
+
+        function prepareEditSubCat(sub) {
+            document.getElementById('editSubCatId').value = sub.id;
+            document.getElementById('newSubCatName').value = sub.name;
+            document.getElementById('subCatSubmitBtn').innerText = '💾 Lưu Thay Đổi';
+            document.getElementById('subCatCancelBtn').style.display = 'block';
+        }
+
+        function resetSubCatForm() {
+            document.getElementById('editSubCatId').value = '';
             document.getElementById('newSubCatName').value = '';
-            renderAdminLists();
-            renderDriveTree();
-            alert('Thêm thành công!');
+            document.getElementById('subCatSubmitBtn').innerText = '+ Thêm Chủ Đề Nhỏ';
+            document.getElementById('subCatCancelBtn').style.display = 'none';
+        }
+
+        async function deleteSubCategory(id) {
+            if(confirm('Xóa chủ đề nhỏ này?')) {
+                try {
+                    await window.deleteDoc(window.doc(window.db, "subcategories", String(id)));
+                    subCategories = subCategories.filter(s => String(s.id) !== String(id));
+                    resetSubCatForm();
+                    renderAdminLists();
+                    renderDriveTree();
+                    alert('Đã xóa thành công!');
+                } catch(e) {
+                    alert('Lỗi xóa: ' + e.message);
+                }
+            }
         }
 
         // --- QUẢN LÝ THÊM/SỬA BÀI HỌC ---
@@ -946,9 +1082,9 @@
 
         function prepareEditCourse(course) {
             document.getElementById('editCourseId').value = course.id;
-            document.getElementById('adminCat').value = course.category || categories[0];
+            document.getElementById('adminCat').value = course.category || (categories[0] ? categories[0].name : '');
             document.getElementById('adminLang').value = course.lang || 'Tiếng Việt';
-            document.getElementById('adminSubCat').value = course.subCat || subCategories[0];
+            document.getElementById('adminSubCat').value = course.subCat || (subCategories[0] ? subCategories[0].name : '');
             document.getElementById('adminTitle').value = course.title || '';
             document.getElementById('adminDrive').value = course.driveId || '';
 
