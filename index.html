@@ -713,7 +713,7 @@
             renderCourses(filtered);
         }
 
-        // --- TRÌNH PHÁT VIDEO ĐƯỢC TỐI ƯU TOÀN MÀN HÌNH ---
+        // --- TRÌNH PHÁT VIDEO CHUẨN XÁC, MỞ TO TỰ NHIÊN, KHÔNG BỊ ĐEN XÌ ---
         let currentPlaylist = [];
         let currentIndex = 0;
 
@@ -757,9 +757,9 @@
                     <div class="col-lg-8 mb-3">
                         <div class="card p-2 p-md-3 border-success bg-white rounded-4 shadow-sm">
                             <h5 class="text-success mb-2 fw-bold" id="videoTitle">${item.title}</h5>
-                            <!-- KHUNG VIDEO ĐƯỢC KÍCH HOẠT FULLSCREEN VÀ TRÀN TOÀN MÀN HÌNH -->
-                            <div class="ratio ratio-16x9 bg-black rounded overflow-hidden shadow">
-                                <iframe id="mainIframe" src="https://drive.google.com/file/d/${cleanId}/preview?usp=sharing" style="border:0;" allow="autoplay; fullscreen" allowfullscreen="true" webkitallowfullscreen="true" mozallowfullscreen="true"></iframe>
+                            <!-- KHUNG VIDEO MỞ TO RÕ RÀNG, HOÀN TOÀN TỰ NHIÊN TRÊN DI ĐỘNG -->
+                            <div class="w-100 rounded overflow-hidden shadow" style="aspect-ratio: 16/9; background: #000;">
+                                <iframe id="mainIframe" src="https://drive.google.com/file/d/${cleanId}/preview?usp=sharing" style="width:100%; height:100%; border:0;" allow="autoplay; fullscreen" allowfullscreen="true"></iframe>
                             </div>
                             <div class="d-flex justify-content-between align-items-center mt-3">
                                 <button class="btn btn-outline-success btn-sm px-3" onclick="prevVideo()">⏮ Bài trước</button>
@@ -816,8 +816,8 @@
                             <div class="card card-custom p-3 bg-white h-100 rounded-4">
                                 <span class="badge bg-success mb-2 align-self-start" style="font-size:0.7rem;">${g.category || 'Hướng dẫn'}</span>
                                 <h6 class="fw-bold text-dark mb-2">${g.title}</h6>
-                                <div class="ratio ratio-16x9 bg-black rounded overflow-hidden">
-                                    <iframe src="https://drive.google.com/file/d/${cleanId}/preview?usp=sharing" style="border:0;" allow="autoplay; fullscreen" allowfullscreen="true" webkitallowfullscreen="true" mozallowfullscreen="true"></iframe>
+                                <div class="w-100 rounded overflow-hidden" style="aspect-ratio: 16/9; background: #000;">
+                                    <iframe src="https://drive.google.com/file/d/${cleanId}/preview?usp=sharing" style="width:100%; height:100%; border:0;" allow="autoplay; fullscreen" allowfullscreen="true"></iframe>
                                 </div>
                             </div>
                         </div>
@@ -1132,7 +1132,7 @@
         }
 
         function prepareEditGuide(guide) {
-            document.getElementById('editGuideId->value') = guide.id;
+            document.getElementById('editGuideId').value = guide.id;
             document.getElementById('guideCat').value = guide.category || '';
             document.getElementById('guideTitle').value = guide.title || '';
             document.getElementById('guideDrive').value = guide.driveId || '';
@@ -1141,7 +1141,7 @@
             document.getElementById('guideCancelBtn').style.display = 'block';
         }
 
-        function resetGuideForm() {
+        function resetGuideGuideForm() {
             document.getElementById('editGuideId').value = '';
             document.getElementById('guideCat').value = '';
             document.getElementById('guideTitle').value = '';
