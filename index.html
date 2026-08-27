@@ -47,6 +47,8 @@
         body {
             background-color: var(--primary-light);
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            -webkit-user-select: none;
+            user-select: none;
         }
 
         .navbar-custom {
@@ -165,6 +167,14 @@
         }
         .fav-btn.active { color: #dc2626; }
 
+        /* Lớp chắn bảo vệ chống kéo thả và tải video */
+        .video-shield {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            z-index: 5;
+            background: transparent;
+        }
+
         .playlist-sidebar {
             background: #1e293b;
             color: white;
@@ -185,7 +195,7 @@
         .playlist-item.active { background: var(--primary-dark); border-left: 4px solid #10b981; }
     </style>
 </head>
-<body>
+<body oncontextmenu="return false;">
 
     <!-- ================= 1. MÀN HÌNH ĐĂNG NHẬP / ĐĂNG KÝ ================= -->
     <div id="authScreen" class="container mt-5 view-section active">
@@ -687,8 +697,12 @@
                                     <button class="fav-btn ${isFav ? 'active' : ''}" onclick="toggleFavorite('${item.id}', event)">
                                         <i class="bi bi-heart-fill"></i>
                                     </button>
-                                    <div class="ratio ratio-16x9 bg-black rounded overflow-hidden">
-                                        <iframe src="https://drive.google.com/file/d/${cleanId}/preview?usp=sharing" style="border:0; pointer-events: none;" allow="autoplay"></iframe>
+                                    <div class="video-shield" onclick="playCourseWithPlaylist('${item.id}', ${JSON.stringify(filtered).replace(/"/g, '&quot;')})"></div>
+                                    <div class="ratio ratio-16x9 bg-black rounded overflow-hidden d-flex align-items-center justify-content-center text-white">
+                                        <div class="text-center p-2">
+                                            <i class="bi bi-play-circle-fill text-success fs-1"></i>
+                                            <p class="small mb-0 mt-1 text-light fw-bold">Nhấn để vào học</p>
+                                        </div>
                                     </div>
                                 </div>
                                 <div class="mb-1">
@@ -713,7 +727,7 @@
             renderCourses(filtered);
         }
 
-        // --- TRÌNH PHÁT VIDEO CHUẨN XÁC, MỞ TO TỰ NHIÊN, KHÔNG BỊ ĐEN XÌ ---
+        // --- TRÌNH PHÁT VIDEO CHUYÊN NGHIỆP TẠI CHỖ, BẢO MẬT TUYỆT ĐỐI ---
         let currentPlaylist = [];
         let currentIndex = 0;
 
@@ -757,13 +771,14 @@
                     <div class="col-lg-8 mb-3">
                         <div class="card p-2 p-md-3 border-success bg-white rounded-4 shadow-sm">
                             <h5 class="text-success mb-2 fw-bold" id="videoTitle">${item.title}</h5>
-                            <!-- KHUNG VIDEO MỞ TO RÕ RÀNG, HOÀN TOÀN TỰ NHIÊN TRÊN DI ĐỘNG -->
-                            <div class="w-100 rounded overflow-hidden shadow" style="aspect-ratio: 16/9; background: #000;">
+                            <!-- KHUNG TRÌNH PHÁT TO, NÉT, CÓ LỚP KHIÊN BẢO VỆ CHỐNG TẢI XUỐNG -->
+                            <div class="position-relative w-100 bg-black rounded overflow-hidden shadow" style="aspect-ratio: 16/9;">
+                                <div class="video-shield"></div>
                                 <iframe id="mainIframe" src="https://drive.google.com/file/d/${cleanId}/preview?usp=sharing" style="width:100%; height:100%; border:0;" allow="autoplay; fullscreen" allowfullscreen="true"></iframe>
                             </div>
                             <div class="d-flex justify-content-between align-items-center mt-3">
                                 <button class="btn btn-outline-success btn-sm px-3" onclick="prevVideo()">⏮ Bài trước</button>
-                                <span class="text-muted small d-none d-sm-inline">Chọn bài bên danh sách phát</span>
+                                <span class="text-muted small d-none d-sm-inline">Chọn bài học ở danh sách bên cạnh</span>
                                 <button class="btn btn-success-custom btn-sm px-3" onclick="nextVideo()">Bài tiếp ⏭</button>
                             </div>
                         </div>
@@ -816,7 +831,8 @@
                             <div class="card card-custom p-3 bg-white h-100 rounded-4">
                                 <span class="badge bg-success mb-2 align-self-start" style="font-size:0.7rem;">${g.category || 'Hướng dẫn'}</span>
                                 <h6 class="fw-bold text-dark mb-2">${g.title}</h6>
-                                <div class="w-100 rounded overflow-hidden" style="aspect-ratio: 16/9; background: #000;">
+                                <div class="position-relative w-100 bg-black rounded overflow-hidden" style="aspect-ratio: 16/9;">
+                                    <div class="video-shield"></div>
                                     <iframe src="https://drive.google.com/file/d/${cleanId}/preview?usp=sharing" style="width:100%; height:100%; border:0;" allow="autoplay; fullscreen" allowfullscreen="true"></iframe>
                                 </div>
                             </div>
@@ -1141,7 +1157,7 @@
             document.getElementById('guideCancelBtn').style.display = 'block';
         }
 
-        function resetGuideGuideForm() {
+        function resetGuideForm() {
             document.getElementById('editGuideId').value = '';
             document.getElementById('guideCat').value = '';
             document.getElementById('guideTitle').value = '';
