@@ -84,6 +84,7 @@
             transform: translateY(-3px);
         }
 
+        /* Tối ưu cây thư mục cho mobile */
         .sidebar-left {
             background: #ffffff;
             border-right: 1px solid #e2e8f0;
@@ -165,7 +166,6 @@
         }
         .fav-btn.active { color: #dc2626; }
 
-        /* Lớp phủ chặn tương tác nhầm trên mobile card */
         .video-overlay-click {
             position: absolute;
             top: 0; left: 0; width: 100%; height: 100%;
@@ -275,8 +275,15 @@
 
         <div class="container-fluid">
             <div class="row">
-                <!-- Cột thư mục gọn gàng -->
-                <div class="col-md-3 col-lg-2 sidebar-left mb-3 mb-md-0">
+                <!-- Nút điều khiển ẩn/hiện thư mục trên mobile -->
+                <div class="col-12 d-md-none bg-white p-2 border-bottom text-end">
+                    <button class="btn btn-sm btn-outline-success" type="button" data-bs-toggle="collapse" data-bs-target="#sidebarMobileCollapse">
+                        <i class="bi bi-folder2-open me-1"></i> 📂 Chọn thư mục học liệu
+                    </button>
+                </div>
+
+                <!-- Cột thư mục (Ẩn gọn trên mobile, bấm nút mới bật ra) -->
+                <div class="col-md-3 col-lg-2 sidebar-left collapse d-md-block" id="sidebarMobileCollapse">
                     <h6 class="text-uppercase fw-bold px-2 mb-2 small text-muted">THƯ MỤC HỌC LIỆU</h6>
                     <a href="#" onclick="showHomeDashboard()" class="tree-item fw-bold mb-2"><i class="bi bi-house-door me-2"></i> Tất cả bài học</a>
                     <div id="driveTreeView"></div>
@@ -284,7 +291,7 @@
                     <a href="#" onclick="showFavorites()" class="tree-item text-danger fw-bold"><i class="bi bi-heart-fill me-2"></i> Yêu thích của tôi</a>
                 </div>
 
-                <!-- Cột nội dung chính -->
+                <!-- Cột nội dung chính chiếm trọn màn hình -->
                 <div class="col-md-9 col-lg-10 p-3 p-md-4" id="contentArea"></div>
             </div>
         </div>
@@ -578,7 +585,7 @@
             showHomeDashboard();
         }
 
-        // --- CÂY THƯ MỤC GỌN GÀNG CHO MOBILE ---
+        // --- CÂY THƯ MỤC GỌN GÀNG ---
         function renderDriveTree() {
             let treeContainer = document.getElementById('driveTreeView');
             let html = '';
@@ -639,6 +646,12 @@
             showHomeDashboard(`${cat} > ${lang} > ${subCat}`);
             let filtered = coursesData.filter(c => c.category === cat && c.lang === lang && c.subCat === subCat);
             renderCourses(filtered);
+            // Ẩn menu thư mục trên mobile sau khi bấm chọn để màn hình rộng thoáng
+            let mobileMenu = document.getElementById('sidebarMobileCollapse');
+            if(mobileMenu && window.innerWidth < 768) {
+                let bsCollapse = bootstrap.Collapse.getInstance(mobileMenu);
+                if(bsCollapse) bsCollapse.hide();
+            }
         }
 
         // --- KHU VỰC HIỂN THỊ BÊN PHẢI ---
@@ -697,7 +710,6 @@
                                     <button class="fav-btn ${isFav ? 'active' : ''}" onclick="toggleFavorite('${item.id}', event)">
                                         <i class="bi bi-heart-fill"></i>
                                     </button>
-                                    <!-- Lớp phủ click để bắt sự kiện chuyển vào trình phát mượt mà trên mobile -->
                                     <div class="video-overlay-click" onclick="playCourseWithPlaylist('${item.id}', ${JSON.stringify(filtered).replace(/"/g, '&quot;')})"></div>
                                     <div class="ratio ratio-16x9 bg-black rounded overflow-hidden">
                                         <iframe src="https://drive.google.com/file/d/${cleanId}/preview?usp=sharing" style="border:0;" allow="autoplay"></iframe>
@@ -725,7 +737,7 @@
             renderCourses(filtered);
         }
 
-        // --- TRÌNH PHÁT VIDEO CHUẨN XÁC TRÊN MOBILE ---
+        // --- TRÌNH PHÁT VIDEO CHUẨN XÁC ---
         let currentPlaylist = [];
         let currentIndex = 0;
 
