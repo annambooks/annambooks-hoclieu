@@ -84,7 +84,6 @@
             transform: translateY(-3px);
         }
 
-        /* Thư mục gọn gàng cho mobile & desktop */
         .sidebar-left {
             background: #ffffff;
             border-right: 1px solid #e2e8f0;
@@ -165,6 +164,15 @@
             z-index: 10;
         }
         .fav-btn.active { color: #dc2626; }
+
+        /* Lớp phủ chặn tương tác nhầm trên mobile card */
+        .video-overlay-click {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            z-index: 5;
+            background: transparent;
+            cursor: pointer;
+        }
 
         .playlist-sidebar {
             background: #1e293b;
@@ -631,10 +639,6 @@
             showHomeDashboard(`${cat} > ${lang} > ${subCat}`);
             let filtered = coursesData.filter(c => c.category === cat && c.lang === lang && c.subCat === subCat);
             renderCourses(filtered);
-            // Thu gọn menu trên mobile sau khi chọn để đỡ che màn hình
-            if(window.innerWidth < 768) {
-                // Tùy chọn thu gọn nếu cần
-            }
         }
 
         // --- KHU VỰC HIỂN THỊ BÊN PHẢI ---
@@ -693,8 +697,10 @@
                                     <button class="fav-btn ${isFav ? 'active' : ''}" onclick="toggleFavorite('${item.id}', event)">
                                         <i class="bi bi-heart-fill"></i>
                                     </button>
-                                    <div class="ratio ratio-16x9 bg-black rounded overflow-hidden" style="cursor: pointer;" onclick="playCourseWithPlaylist('${item.id}', ${JSON.stringify(filtered).replace(/"/g, '&quot;')})">
-                                        <iframe src="https://drive.google.com/file/d/${cleanId}/preview" style="pointer-events: none;" allow="autoplay"></iframe>
+                                    <!-- Lớp phủ click để bắt sự kiện chuyển vào trình phát mượt mà trên mobile -->
+                                    <div class="video-overlay-click" onclick="playCourseWithPlaylist('${item.id}', ${JSON.stringify(filtered).replace(/"/g, '&quot;')})"></div>
+                                    <div class="ratio ratio-16x9 bg-black rounded overflow-hidden">
+                                        <iframe src="https://drive.google.com/file/d/${cleanId}/preview?usp=sharing" style="border:0;" allow="autoplay"></iframe>
                                     </div>
                                 </div>
                                 <div class="mb-1">
@@ -719,7 +725,7 @@
             renderCourses(filtered);
         }
 
-        // --- TRÌNH PHÁT VIDEO & TỰ ĐỘNG CUỘN LÊN ĐẦU CHO MOBILE ---
+        // --- TRÌNH PHÁT VIDEO CHUẨN XÁC TRÊN MOBILE ---
         let currentPlaylist = [];
         let currentIndex = 0;
 
@@ -738,8 +744,6 @@
             currentIndex = currentPlaylist.findIndex(c => String(c.id) === String(activeId));
             if(currentIndex === -1) currentIndex = 0;
             renderPlayerScreen();
-            
-            // Tự động cuộn mượt mà lên đầu trang để khách thấy video ngay lập tức trên mobile
             window.scrollTo({ top: 0, behavior: 'smooth' });
         }
 
@@ -766,7 +770,7 @@
                         <div class="card p-2 p-md-3 border-success bg-white rounded-4 shadow-sm">
                             <h5 class="text-success mb-2" id="videoTitle">${item.title}</h5>
                             <div class="ratio ratio-16x9 bg-black rounded overflow-hidden">
-                                <iframe id="mainIframe" src="https://drive.google.com/file/d/${cleanId}/preview" allow="autoplay" allowfullscreen></iframe>
+                                <iframe id="mainIframe" src="https://drive.google.com/file/d/${cleanId}/preview?usp=sharing" style="border:0;" allow="autoplay" allowfullscreen></iframe>
                             </div>
                             <div class="d-flex justify-content-between align-items-center mt-3">
                                 <button class="btn btn-outline-success btn-sm" onclick="prevVideo()">⏮ Bài trước</button>
@@ -825,7 +829,7 @@
                                 <span class="badge bg-success mb-2 align-self-start" style="font-size:0.7rem;">${g.category || 'Hướng dẫn'}</span>
                                 <h6 class="fw-bold text-dark mb-2">${g.title}</h6>
                                 <div class="ratio ratio-16x9 bg-black rounded overflow-hidden">
-                                    <iframe src="https://drive.google.com/file/d/${cleanId}/preview" allow="autoplay" allowfullscreen></iframe>
+                                    <iframe src="https://drive.google.com/file/d/${cleanId}/preview?usp=sharing" style="border:0;" allow="autoplay" allowfullscreen></iframe>
                                 </div>
                             </div>
                         </div>
