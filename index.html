@@ -39,7 +39,7 @@
 
     <style>
         :root {
-            --primary-dark: #064e3b; /* Xanh lá đậm */
+            --primary-dark: #064e3b;
             --primary-light: #f0fdf4;
             --accent-green: #059669;
         }
@@ -84,7 +84,6 @@
             transform: translateY(-3px);
         }
 
-        /* Tối ưu cây thư mục cho mobile */
         .sidebar-left {
             background: #ffffff;
             border-right: 1px solid #e2e8f0;
@@ -166,14 +165,6 @@
         }
         .fav-btn.active { color: #dc2626; }
 
-        .video-overlay-click {
-            position: absolute;
-            top: 0; left: 0; width: 100%; height: 100%;
-            z-index: 5;
-            background: transparent;
-            cursor: pointer;
-        }
-
         .playlist-sidebar {
             background: #1e293b;
             color: white;
@@ -211,7 +202,6 @@
                     <h3 class="fw-bold" style="color: var(--primary-dark);">Annambooks</h3>
                     <p class="text-muted small mb-4">Hệ thống học liệu số (Đồng bộ đám mây)</p>
                     
-                    <!-- Form đăng nhập -->
                     <div id="loginForm" class="text-start">
                         <div class="mb-3">
                             <label class="form-label">Tên đăng nhập / Email</label>
@@ -229,7 +219,6 @@
                         <p class="text-center mt-2 small">Chưa có tài khoản? <a href="#" onclick="toggleAuth(true)" style="color: var(--accent-green); text-decoration: none; font-weight: bold;">Đăng ký ngay</a></p>
                     </div>
 
-                    <!-- Form đăng ký -->
                     <div id="registerForm" class="text-start" style="display: none;">
                         <div class="mb-3">
                             <label class="form-label">Tên đăng nhập / Email</label>
@@ -275,14 +264,12 @@
 
         <div class="container-fluid">
             <div class="row">
-                <!-- Nút điều khiển ẩn/hiện thư mục trên mobile -->
                 <div class="col-12 d-md-none bg-white p-2 border-bottom text-end">
                     <button class="btn btn-sm btn-outline-success" type="button" data-bs-toggle="collapse" data-bs-target="#sidebarMobileCollapse">
                         <i class="bi bi-folder2-open me-1"></i> 📂 Chọn thư mục học liệu
                     </button>
                 </div>
 
-                <!-- Cột thư mục (Ẩn gọn trên mobile, bấm nút mới bật ra) -->
                 <div class="col-md-3 col-lg-2 sidebar-left collapse d-md-block" id="sidebarMobileCollapse">
                     <h6 class="text-uppercase fw-bold px-2 mb-2 small text-muted">THƯ MỤC HỌC LIỆU</h6>
                     <a href="#" onclick="showHomeDashboard()" class="tree-item fw-bold mb-2"><i class="bi bi-house-door me-2"></i> Tất cả bài học</a>
@@ -291,7 +278,6 @@
                     <a href="#" onclick="showFavorites()" class="tree-item text-danger fw-bold"><i class="bi bi-heart-fill me-2"></i> Yêu thích của tôi</a>
                 </div>
 
-                <!-- Cột nội dung chính chiếm trọn màn hình -->
                 <div class="col-md-9 col-lg-10 p-3 p-md-4" id="contentArea"></div>
             </div>
         </div>
@@ -315,7 +301,6 @@
                     </ul>
                     
                     <div class="tab-content">
-                        <!-- Quản lý Tài khoản Khách & Phê duyệt -->
                         <div class="tab-pane fade show active" id="tabUser">
                             <p class="text-muted small">Phê duyệt hoặc chặn tài khoản đăng ký trên mây:</p>
                             <div class="input-group mb-3">
@@ -326,7 +311,6 @@
                             <div id="adminUserList" style="max-height: 200px; overflow-y: auto;" class="border p-2 bg-light small"></div>
                         </div>
 
-                        <!-- Quản lý Bài học -->
                         <div class="tab-pane fade" id="tabCourse">
                             <input type="hidden" id="editCourseId" value="">
                             <div class="row">
@@ -361,7 +345,6 @@
                             <div id="adminCourseList" style="max-height: 120px; overflow-y: auto;" class="border p-2 bg-light small"></div>
                         </div>
 
-                        <!-- Quản lý Danh mục Lớn -->
                         <div class="tab-pane fade" id="tabBigCat">
                             <input type="hidden" id="editBigCatId" value="">
                             <div class="mb-3">
@@ -374,7 +357,6 @@
                             <div id="adminBigCatList" style="max-height: 150px; overflow-y: auto;" class="border p-2 bg-light small"></div>
                         </div>
 
-                        <!-- Quản lý Chủ đề nhỏ -->
                         <div class="tab-pane fade" id="tabSubCat">
                             <input type="hidden" id="editSubCatId" value="">
                             <div class="mb-3">
@@ -387,7 +369,6 @@
                             <div id="adminSubCatList" style="max-height: 150px; overflow-y: auto;" class="border p-2 bg-light small"></div>
                         </div>
 
-                        <!-- Quản lý Hướng dẫn -->
                         <div class="tab-pane fade" id="tabGuide">
                             <input type="hidden" id="editGuideId" value="">
                             <div class="mb-3">
@@ -423,7 +404,6 @@
         let guideData = [];
         let userAccounts = {};
 
-        // --- TẢI TOÀN BỘ DỮ LIỆU TỪ FIREBASE ---
         async function loadDataFromFirebase() {
             try {
                 if(!window.db) { setTimeout(loadDataFromFirebase, 300); return; }
@@ -585,7 +565,6 @@
             showHomeDashboard();
         }
 
-        // --- CÂY THƯ MỤC GỌN GÀNG ---
         function renderDriveTree() {
             let treeContainer = document.getElementById('driveTreeView');
             let html = '';
@@ -646,7 +625,6 @@
             showHomeDashboard(`${cat} > ${lang} > ${subCat}`);
             let filtered = coursesData.filter(c => c.category === cat && c.lang === lang && c.subCat === subCat);
             renderCourses(filtered);
-            // Ẩn menu thư mục trên mobile sau khi bấm chọn để màn hình rộng thoáng
             let mobileMenu = document.getElementById('sidebarMobileCollapse');
             if(mobileMenu && window.innerWidth < 768) {
                 let bsCollapse = bootstrap.Collapse.getInstance(mobileMenu);
@@ -654,7 +632,6 @@
             }
         }
 
-        // --- KHU VỰC HIỂN THỊ BÊN PHẢI ---
         function showHomeDashboard(title = "Tất cả kho học liệu số") {
             document.getElementById('contentArea').innerHTML = `
                 <div class="row mb-3 align-items-center">
@@ -710,9 +687,8 @@
                                     <button class="fav-btn ${isFav ? 'active' : ''}" onclick="toggleFavorite('${item.id}', event)">
                                         <i class="bi bi-heart-fill"></i>
                                     </button>
-                                    <div class="video-overlay-click" onclick="playCourseWithPlaylist('${item.id}', ${JSON.stringify(filtered).replace(/"/g, '&quot;')})"></div>
                                     <div class="ratio ratio-16x9 bg-black rounded overflow-hidden">
-                                        <iframe src="https://drive.google.com/file/d/${cleanId}/preview?usp=sharing" style="border:0;" allow="autoplay"></iframe>
+                                        <iframe src="https://drive.google.com/file/d/${cleanId}/preview?usp=sharing" style="border:0; pointer-events: none;" allow="autoplay"></iframe>
                                     </div>
                                 </div>
                                 <div class="mb-1">
@@ -737,7 +713,7 @@
             renderCourses(filtered);
         }
 
-        // --- TRÌNH PHÁT VIDEO CHUẨN XÁC ---
+        // --- TRÌNH PHÁT VIDEO ĐƯỢC TỐI ƯU TOÀN MÀN HÌNH ---
         let currentPlaylist = [];
         let currentIndex = 0;
 
@@ -780,14 +756,15 @@
                 <div class="row">
                     <div class="col-lg-8 mb-3">
                         <div class="card p-2 p-md-3 border-success bg-white rounded-4 shadow-sm">
-                            <h5 class="text-success mb-2" id="videoTitle">${item.title}</h5>
-                            <div class="ratio ratio-16x9 bg-black rounded overflow-hidden">
-                                <iframe id="mainIframe" src="https://drive.google.com/file/d/${cleanId}/preview?usp=sharing" style="border:0;" allow="autoplay" allowfullscreen></iframe>
+                            <h5 class="text-success mb-2 fw-bold" id="videoTitle">${item.title}</h5>
+                            <!-- KHUNG VIDEO ĐƯỢC KÍCH HOẠT FULLSCREEN VÀ TRÀN TOÀN MÀN HÌNH -->
+                            <div class="ratio ratio-16x9 bg-black rounded overflow-hidden shadow">
+                                <iframe id="mainIframe" src="https://drive.google.com/file/d/${cleanId}/preview?usp=sharing" style="border:0;" allow="autoplay; fullscreen" allowfullscreen="true" webkitallowfullscreen="true" mozallowfullscreen="true"></iframe>
                             </div>
                             <div class="d-flex justify-content-between align-items-center mt-3">
-                                <button class="btn btn-outline-success btn-sm" onclick="prevVideo()">⏮ Bài trước</button>
+                                <button class="btn btn-outline-success btn-sm px-3" onclick="prevVideo()">⏮ Bài trước</button>
                                 <span class="text-muted small d-none d-sm-inline">Chọn bài bên danh sách phát</span>
-                                <button class="btn btn-success-custom btn-sm" onclick="nextVideo()">Bài tiếp ⏭</button>
+                                <button class="btn btn-success-custom btn-sm px-3" onclick="nextVideo()">Bài tiếp ⏭</button>
                             </div>
                         </div>
                     </div>
@@ -825,7 +802,6 @@
             }
         }
 
-        // --- HIỂN THỊ HƯỚNG DẪN SỬ DỤNG ---
         function showGuideList() {
             let area = document.getElementById('contentArea');
             let html = `<h5 class="fw-bold mb-3" style="color: var(--primary-dark);" id="viewTitle">📖 Hướng Dẫn Sử Dụng</h5><div class="row">`;
@@ -841,7 +817,7 @@
                                 <span class="badge bg-success mb-2 align-self-start" style="font-size:0.7rem;">${g.category || 'Hướng dẫn'}</span>
                                 <h6 class="fw-bold text-dark mb-2">${g.title}</h6>
                                 <div class="ratio ratio-16x9 bg-black rounded overflow-hidden">
-                                    <iframe src="https://drive.google.com/file/d/${cleanId}/preview?usp=sharing" style="border:0;" allow="autoplay" allowfullscreen></iframe>
+                                    <iframe src="https://drive.google.com/file/d/${cleanId}/preview?usp=sharing" style="border:0;" allow="autoplay; fullscreen" allowfullscreen="true" webkitallowfullscreen="true" mozallowfullscreen="true"></iframe>
                                 </div>
                             </div>
                         </div>
@@ -852,7 +828,6 @@
             area.innerHTML = html;
         }
 
-        // --- ADMIN PANEL ---
         function openAdminPanel() {
             loadDataFromFirebase();
             setTimeout(() => {
@@ -1157,7 +1132,7 @@
         }
 
         function prepareEditGuide(guide) {
-            document.getElementById('editGuideId').value = guide.id;
+            document.getElementById('editGuideId->value') = guide.id;
             document.getElementById('guideCat').value = guide.category || '';
             document.getElementById('guideTitle').value = guide.title || '';
             document.getElementById('guideDrive').value = guide.driveId || '';
